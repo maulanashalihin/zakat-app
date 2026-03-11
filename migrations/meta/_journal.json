@@ -15,6 +15,13 @@
       "when": 1773229118557,
       "tag": "0001_sticky_nebula",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1773249614057,
+      "tag": "0002_glamorous_blockbuster",
+      "breakpoints": true
     }
   ]
 }
