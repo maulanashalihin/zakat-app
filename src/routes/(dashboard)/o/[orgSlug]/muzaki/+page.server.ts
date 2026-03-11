@@ -9,7 +9,16 @@ export const load: PageServerLoad = async ({ locals, parent, url }) => {
 	const sectorId = url.searchParams.get('sector');
 	const search = url.searchParams.get('search');
 
-	// ✅ OPTIMIZED: Build query with proper indexing
+	// ✅ OPTIMIZED: Load sectors on-demand (not in layout)
+	const sectors = await locals.db
+		.selectFrom('sectors')
+		.select(['id', 'name'])
+		.where('organization_id', '=', orgId)
+		.where('is_active', '=', 1)
+		.orderBy('name', 'asc')
+		.execute();
+
+	// Build query
 	let query = locals.db
 		.selectFrom('muzaki')
 		.select([
@@ -44,7 +53,7 @@ export const load: PageServerLoad = async ({ locals, parent, url }) => {
 		.limit(100) // Increased limit for better UX
 		.execute();
 
-	return { muzaki };
+	return { muzaki, sectors };
 };
 
 export const actions: Actions = {

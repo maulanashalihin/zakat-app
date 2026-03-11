@@ -3,20 +3,30 @@ import { fail, error } from '@sveltejs/kit';
 
 export const load: PageServerLoad = async ({ locals, parent }) => {
 	const { organization, user } = await parent();
-	
+
 	// Only admin and super_admin can manage petugas
 	if (user.role !== 'admin' && user.role !== 'super_admin') {
 		throw error(403, 'Tidak memiliki izin mengelola petugas');
 	}
-	
-	// Get all users in this organization
+
+	// ✅ OPTIMIZED: Select only needed columns with LIMIT
 	const users = await locals.db
 		.selectFrom('users')
-		.select(['id', 'name', 'email', 'role', 'sector_id', 'is_active', 'created_at'])
+		.select([
+			'id',
+			'name',
+			'email',
+			'role',
+			'sector_id',
+			'is_active',
+			'created_at',
+			'avatar'
+		])
 		.where('organization_id', '=', organization.id)
 		.orderBy('created_at', 'desc')
+		.limit(100) // Prevent loading too many users
 		.execute();
-	
+
 	return {
 		users
 	};
