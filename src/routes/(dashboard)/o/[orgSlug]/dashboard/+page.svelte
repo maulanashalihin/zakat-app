@@ -1,5 +1,5 @@
 <script>
-  import { Building2, Users, HandHeart, Package, DollarSign, ArrowUpRight, TrendingUp, Calendar, MapPin } from 'lucide-svelte';
+  import { Building2, Users, HandHeart, Package, DollarSign, ArrowUpRight, TrendingUp, Calendar, MapPin, Settings } from 'lucide-svelte';
 
   let { data } = $props();
 
