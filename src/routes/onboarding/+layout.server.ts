@@ -15,7 +15,15 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 
 	// If user already has organization, skip onboarding
 	if (locals.user.organizationId) {
-		throw redirect(302, `/o/${locals.user.organizationId}/dashboard`);
+		// Get organization slug
+		const org = await locals.db
+			.selectFrom('organizations')
+			.select('slug')
+			.where('id', '=', locals.user.organizationId)
+			.executeTakeFirst();
+
+		const redirectPath = org?.slug ? `/o/${org.slug}/dashboard` : '/dashboard';
+		throw redirect(302, redirectPath);
 	}
 
 	// Get or create onboarding session
@@ -41,20 +49,6 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 	// If completed and not on selesai page, redirect to selesai
 	if (session?.is_completed && !path.includes('selesai')) {
 		throw redirect(302, '/onboarding/selesai');
-	}
-
-	// If completed and on selesai page, load organization data
-	if (session?.is_completed && path.includes('selesai')) {
-		const { OrganizationService } = await import('$lib/services/organization');
-		const orgService = new OrganizationService(locals.db);
-		const organization = await orgService.getByUserId(locals.user.id);
-
-		return {
-			user: locals.user,
-			onboarding: session,
-			currentStep: 5,
-			organization
-		};
 	}
 
 	// Don't allow skipping steps

@@ -10,12 +10,16 @@ export const load: PageServerLoad = async ({ locals }) => {
 		throw redirect(302, '/onboarding/langkah-1');
 	}
 
-	// Get organization info
-	const org = {
-		name: tempData.step1.name,
-		slug: tempData.step1.slug,
-		sectors: tempData.step3?.sectors || []
-	};
+	// Get organization from database (already created by completeOnboarding)
+	const organization = await locals.db
+		.selectFrom('organizations')
+		.select(['id', 'name', 'slug'])
+		.where('slug', '=', tempData.step1.slug)
+		.executeTakeFirst();
 
-	return { organization: org };
+	if (!organization) {
+		throw redirect(302, '/onboarding/langkah-1');
+	}
+
+	return { organization };
 };
