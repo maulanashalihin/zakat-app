@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, index } from 'drizzle-orm/sqlite-core';
 import { relations } from 'drizzle-orm';
 
 // ============================================================================
@@ -28,7 +28,14 @@ export const users = sqliteTable('users', {
   // Timestamps
   createdAt: integer('created_at', { mode: 'number' }).$defaultFn(() => Date.now()),
   updatedAt: integer('updated_at', { mode: 'number' }).$defaultFn(() => Date.now())
-});
+}, (table) => [
+  // Indexes for frequently queried columns
+  index('idx_users_organization_id').on(table.organizationId),
+  index('idx_users_sector_id').on(table.sectorId),
+  index('idx_users_role').on(table.role),
+  index('idx_users_is_active').on(table.isActive),
+  index('idx_users_email_provider').on(table.email, table.provider)
+]);
 
 // Sessions table
 export const sessions = sqliteTable('sessions', {
@@ -85,7 +92,10 @@ export const organizations = sqliteTable('organizations', {
   // Timestamps
   createdAt: integer('created_at', { mode: 'number' }).$defaultFn(() => Date.now()),
   updatedAt: integer('updated_at', { mode: 'number' }).$defaultFn(() => Date.now())
-});
+}, (table) => [
+  index('idx_organizations_slug').on(table.slug),
+  index('idx_organizations_is_active').on(table.isActive)
+]);
 
 // ============================================================================
 // ZAKAT MANAGEMENT TABLES (NEW)
@@ -103,7 +113,11 @@ export const sectors = sqliteTable('sectors', {
   isActive: integer('is_active', { mode: 'boolean' }).default(true),
   createdAt: integer('created_at', { mode: 'number' }).$defaultFn(() => Date.now()),
   updatedAt: integer('updated_at', { mode: 'number' }).$defaultFn(() => Date.now())
-});
+}, (table) => [
+  index('idx_sectors_organization_id').on(table.organizationId),
+  index('idx_sectors_is_active').on(table.isActive),
+  index('idx_sectors_org_active').on(table.organizationId, table.isActive)
+]);
 
 // Periods - per organization
 export const periods = sqliteTable('periods', {
@@ -147,7 +161,18 @@ export const muzaki = sqliteTable('muzaki', {
   // Timestamps
   createdAt: integer('created_at', { mode: 'number' }).$defaultFn(() => Date.now()),
   updatedAt: integer('updated_at', { mode: 'number' }).$defaultFn(() => Date.now())
-});
+}, (table) => [
+  // Critical indexes for organization queries
+  index('idx_muzaki_organization_id').on(table.organizationId),
+  index('idx_muzaki_sector_id').on(table.sectorId),
+  index('idx_muzaki_created_at').on(table.createdAt),
+  // Composite indexes for common query patterns
+  index('idx_muzaki_org_sector').on(table.organizationId, table.sectorId),
+  index('idx_muzaki_org_created').on(table.organizationId, table.createdAt),
+  index('idx_muzaki_org_name').on(table.organizationId, table.name),
+  // Index for petugas queries
+  index('idx_muzaki_petugas_id').on(table.petugasId)
+]);
 
 // Mustahik - penerima zakat
 export const mustahik = sqliteTable('mustahik', {
@@ -183,7 +208,18 @@ export const mustahik = sqliteTable('mustahik', {
   // Timestamps
   createdAt: integer('created_at', { mode: 'number' }).$defaultFn(() => Date.now()),
   updatedAt: integer('updated_at', { mode: 'number' }).$defaultFn(() => Date.now())
-});
+}, (table) => [
+  // Critical indexes for organization queries
+  index('idx_mustahik_organization_id').on(table.organizationId),
+  index('idx_mustahik_sector_id').on(table.sectorId),
+  index('idx_mustahik_created_at').on(table.createdAt),
+  // Composite indexes for common query patterns
+  index('idx_mustahik_org_sector').on(table.organizationId, table.sectorId),
+  index('idx_mustahik_org_created').on(table.organizationId, table.createdAt),
+  index('idx_mustahik_org_name').on(table.organizationId, table.name),
+  // Index for distribution queries
+  index('idx_mustahik_status_distribusi').on(table.statusDistribusi)
+]);
 
 // Mustahik allocations
 export const mustahikAllocations = sqliteTable('mustahik_allocations', {
