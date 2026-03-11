@@ -1,10 +1,15 @@
 import type { PageServerLoad } from './$types';
-import { redirect } from '@sveltejs/kit';
+import { redirect, error } from '@sveltejs/kit';
 
 export const load: PageServerLoad = async ({ locals }) => {
   // Check authentication
   if (!locals.user) {
     throw redirect(302, '/login');
+  }
+
+  // Only super_admin can access users page
+  if (locals.user.role !== 'super_admin') {
+    throw error(403, 'Access denied. Super admin only.');
   }
 
   // Fetch users directly from database (no client-side fetch needed)

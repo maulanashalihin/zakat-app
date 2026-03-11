@@ -171,7 +171,7 @@
     </nav>
 
     <!-- User Menu -->
-    <div class="p-4 border-t border-slate-200 dark:border-slate-700">
+      <div class="p-4 border-t border-slate-200 dark:border-slate-700">
       <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 mb-3">
         {#if user.avatar}
           <img src={user.avatar} alt={user.name} class="w-9 h-9 rounded-full object-cover shadow-sm" />
@@ -188,13 +188,23 @@
       
       <div class="space-y-2">
         <a
-          href="/profile"
+          href="/o/{organization.slug}/profile"
           onclick={closeMobileMenu}
           class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
         >
-          <Settings class="w-5 h-5 shrink-0" />
+          <User class="w-5 h-5 shrink-0" />
           <span>Profile</span>
         </a>
+        {#if user.role === 'super_admin'}
+          <a
+            href="/dashboard/users"
+            onclick={closeMobileMenu}
+            class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+          >
+            <Users class="w-5 h-5 shrink-0" />
+            <span>Users</span>
+          </a>
+        {/if}
         <button
           onclick={toggleTheme}
           class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
