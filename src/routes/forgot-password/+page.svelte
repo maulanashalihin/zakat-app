@@ -40,85 +40,83 @@
   }
 </script>
 
+<svelte:head>
+  <title>Lupa Password | ZakatApp</title>
+</svelte:head>
+
 <div class="min-h-screen flex items-center justify-center py-12 px-4 grain" style="background-color: var(--bg-primary);">
   <div class="absolute inset-0 pointer-events-none">
-    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full blur-3xl" style="background-color: var(--accent-bg); opacity: 0.5;"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-3xl opacity-20" style="background-color: var(--accent-primary);"></div>
   </div>
   
   <div class="w-full max-w-md relative z-10">
-    <div class="mb-6">
-      <a href="/login" class="inline-flex items-center gap-2 transition text-sm cursor-pointer" style="color: var(--text-secondary);">
-        <ArrowLeft class="w-4 h-4" />
-        Back to login
+    <!-- Logo -->
+    <div class="text-center mb-8">
+      <a href="/" class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg mb-4">
+        <Hexagon class="w-8 h-8 text-white" />
       </a>
+      <h1 class="text-3xl font-bold" style="color: var(--text-primary);">Lupa Password</h1>
+      <p class="mt-2" style="color: var(--text-secondary);">Masukkan email untuk reset password</p>
     </div>
-    
-    {#if success}
-      <div class="card-elevated p-8 text-center">
-        <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style="background-color: var(--success-bg);">
-          <CheckCircle class="w-8 h-8" style="color: var(--success);" />
-        </div>
-        <h2 class="font-display text-display-xs mb-2" style="color: var(--text-primary);">Check your email</h2>
-        <p class="mb-6" style="color: var(--text-secondary);">
-          If an account exists for <span style="color: var(--text-primary);">{email}</span>, we've sent password reset instructions.
-        </p>
-        <a 
-          href="/login" 
-          class="btn-primary w-full"
-        >
-          Return to login
-        </a>
-      </div>
-    {:else}
-      <div class="card-elevated p-8">
-        <div class="text-center mb-8">
-          <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4" style="background-color: var(--accent-primary);">
-            <Hexagon class="w-6 h-6" style="color: #0a0a0a;" strokeWidth={2.5} />
+
+    <!-- Form -->
+    <div class="rounded-2xl shadow-sm p-8" style="background-color: var(--bg-secondary); border: 1px solid var(--border-primary);">
+      {#if success}
+        <div class="text-center py-4">
+          <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+            <CheckCircle class="w-8 h-8 text-green-600" />
           </div>
-          <h1 class="font-display text-display-xs mb-2" style="color: var(--text-primary);">Forgot Password?</h1>
-          <p class="text-sm" style="color: var(--text-secondary);">
-            Enter your email address and we'll send you a link to reset your password.
-          </p>
+          <h3 class="text-xl font-semibold mb-2" style="color: var(--text-primary);">Email Terkirim!</h3>
+          <p class="text-sm mb-6" style="color: var(--text-secondary);">Cek email Anda untuk link reset password.</p>
+          <a href="/login" class="btn-primary inline-flex items-center gap-2">
+            <ArrowLeft class="w-4 h-4" />
+            Kembali ke Login
+          </a>
         </div>
-        
-        {#if errorMsg}
-          <div class="mb-6 p-4 rounded-xl text-sm" style="background-color: var(--error-bg); color: var(--error); border: 1px solid var(--error-bg);">
-            {errorMsg}
-          </div>
-        {/if}
-        
-        <form onsubmit={handleSubmit} class="space-y-5">
+      {:else}
+        <form onsubmit={handleSubmit} class="space-y-6">
+          {#if errorMsg}
+            <div class="p-4 rounded-lg bg-red-50 border border-red-200">
+              <p class="text-sm text-red-600">{errorMsg}</p>
+            </div>
+          {/if}
+
           <div>
-            <label for="email" class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">
-              Email Address
-            </label>
+            <label for="email" class="block text-sm font-medium mb-1" style="color: var(--text-secondary);">Email</label>
             <div class="relative">
-              <Mail class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style="color: var(--text-muted);" />
+              <Mail class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style="color: var(--text-tertiary);" />
               <input
-                id="email"
                 type="email"
+                id="email"
                 bind:value={email}
                 required
-                class="input pl-12"
-                placeholder="you@example.com"
+                class="input w-full pl-10"
+                placeholder="nama@email.com"
               />
             </div>
           </div>
-          
+
           <button
             type="submit"
             disabled={loading}
-            class="btn-primary w-full cursor-pointer"
+            class="w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {#if loading}
-              <Loader2 class="w-5 h-5 animate-spin" />
-              Sending...
+              <Loader2 class="w-5 h-5 animate-spin mr-2" />
+              Mengirim...
             {:else}
-              Send Reset Link
+              Kirim Link Reset
             {/if}
           </button>
+
+          <div class="text-center">
+            <a href="/login" class="text-sm inline-flex items-center gap-1" style="color: var(--accent-primary);">
+              <ArrowLeft class="w-4 h-4" />
+              Kembali ke login
+            </a>
+          </div>
         </form>
-      </div>
-    {/if}
+      {/if}
+    </div>
   </div>
 </div>

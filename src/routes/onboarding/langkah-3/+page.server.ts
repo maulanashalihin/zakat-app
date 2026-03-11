@@ -7,7 +7,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const tempData = await service.getTempData(locals.user!.id);
 	
 	return {
-		savedData: tempData.step3
+		savedSectors: tempData.step3?.sectors || []
 	};
 };
 
@@ -15,17 +15,17 @@ export const actions: Actions = {
 	default: async ({ request, locals }) => {
 		const formData = await request.formData();
 		
-		// Parse sectors from form data
-		const sectors: Array<{ name: string; color: string; description: string }> = [];
+		// Parse sectors from form data dynamically
+		const sectors: Array<{ name: string; color: string }> = [];
 		let index = 0;
 		
-		while (formData.has(`sectors[${index}].name`)) {
-			const name = formData.get(`sectors[${index}].name`)?.toString().trim();
+		// Keep reading until no more sectors found
+		while (formData.has(`sectors[${index}][name]`)) {
+			const name = formData.get(`sectors[${index}][name]`)?.toString().trim();
 			if (name) {
 				sectors.push({
 					name,
-					color: formData.get(`sectors[${index}].color`)?.toString() || '#3b82f6',
-					description: formData.get(`sectors[${index}].description`)?.toString() || ''
+					color: formData.get(`sectors[${index}][color]`)?.toString() || '#3b82f6'
 				});
 			}
 			index++;

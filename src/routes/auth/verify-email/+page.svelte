@@ -19,6 +19,10 @@
   });
 </script>
 
+<svelte:head>
+  <title>Verifikasi Email | ZakatApp</title>
+</svelte:head>
+
 <div class="min-h-screen flex items-center justify-center px-4 grain" style="background-color: var(--bg-primary);">
   <div class="absolute inset-0 pointer-events-none">
     <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full blur-3xl" style="background-color: var(--accent-bg); opacity: 0.5;"></div>

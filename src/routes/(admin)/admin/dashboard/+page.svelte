@@ -14,6 +14,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>Super Admin Dashboard | ZakatApp</title>
+</svelte:head>
+
 <div class="p-6">
   <!-- Header -->
   <div class="mb-8">

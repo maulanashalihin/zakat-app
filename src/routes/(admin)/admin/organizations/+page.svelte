@@ -11,6 +11,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>Kelola Organisasi | ZakatApp</title>
+</svelte:head>
+
 <div class="p-6">
   <!-- Header -->
   <div class="flex items-center justify-between mb-6">

@@ -1,166 +1,85 @@
 <script>
   let { data, form } = $props();
   
-  const sectors = data.sectors;
-  
-  // Initialize members array
-  let members = $state(form?.values?.members || []);
-  
-  const errors = form?.errors || {};
-  
-  function addMember() {
-    members = [...members, { name: '', email: '', role: 'petugas', sectorId: '' }];
-  }
-  
-  function removeMember(index) {
-    members = members.filter((_, i) => i !== index);
-  }
+  const user = $derived(data.user);
+  const errors = $derived(form?.errors || {});
 </script>
 
-<div class="bg-white rounded-lg shadow-sm p-6">
+<svelte:head>
+  <title>Setup Tim - ZakatApp</title>
+</svelte:head>
+
+<div class="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 p-6">
   <div class="mb-6">
-    <h2 class="text-2xl font-bold text-slate-900">Undang Tim (Opsional)</h2>
-    <p class="text-slate-600 mt-1">
-      Tambahkan petugas untuk membantu mengelola zakat
+    <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Daftar Tim</h2>
+    <p class="text-slate-600 dark:text-slate-400 mt-1">
+      Tambahkan petugas yang akan membantu mengelola zakat
     </p>
   </div>
 
-  <form method="POST" class="space-y-4" action="?/default">
-    {#if errors['members']}
-      <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p class="text-red-600 text-sm">{errors['members']}</p>
+  <form method="POST" class="space-y-6">
+    <!-- Admin Info Card -->
+    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+      <div class="flex items-center">
+        <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
+          {user.name.charAt(0).toUpperCase()}
+        </div>
+        <div class="ml-3">
+          <p class="font-medium text-slate-900 dark:text-white">{user.name}</p>
+          <p class="text-sm text-slate-500 dark:text-slate-400">{user.email}</p>
+        </div>
+        <span class="ml-auto px-2 py-1 text-xs font-medium rounded bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300">
+          Admin
+        </span>
       </div>
-    {/if}
-
-    <!-- Members List -->
-    {#if members.length > 0}
-      <div class="space-y-4">
-        {#each members as member, i (i)}
-          <div class="p-4 bg-slate-50 rounded-lg">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-              <!-- Name -->
-              <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Nama</label>
-                <input
-                  type="text"
-                  name="members[{i}].name"
-                  bind:value={members[i].name}
-                  placeholder="Nama petugas"
-                  class="input w-full"
-                  required
-                />
-              </div>
-              
-              <!-- Email -->
-              <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Email</label>
-                <input
-                  type="email"
-                  name="members[{i}].email"
-                  bind:value={members[i].email}
-                  placeholder="email@example.com"
-                  class="input w-full {errors[`members[${i}].email`] ? 'border-red-500' : ''}"
-                  required
-                />
-              </div>
-              
-              <!-- Role -->
-              <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Peran</label>
-                <select
-                  name="members[{i}].role"
-                  bind:value={members[i].role}
-                  class="input w-full"
-                >
-                  <option value="petugas">Petugas (Input Data)</option>
-                  <option value="viewer">Viewer (Lihat Laporan)</option>
-                </select>
-              </div>
-              
-              <!-- Sector (for petugas) -->
-              <div class="flex gap-2">
-                {#if members[i].role === 'petugas'}
-                  <div class="flex-1">
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Sektor</label>
-                    <select
-                      name="members[{i}].sectorId"
-                      bind:value={members[i].sectorId}
-                      class="input w-full"
-                    >
-                      <option value="">Semua Sektor</option>
-                      {#each sectors as sector}
-                        <option value={sector.id || sector.name}>{sector.name}</option>
-                      {/each}
-                    </select>
-                  </div>
-                {/if}
-                
-                <!-- Remove Button -->
-                <div class="flex items-end">
-                  <button
-                    type="button"
-                    onclick={() => removeMember(i)}
-                    class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors mb-0.5"
-                    title="Hapus"
-                  >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        {/each}
-      </div>
-    {/if}
-
-    <!-- Add Button -->
-    <button
-      type="button"
-      onclick={addMember}
-      class="w-full py-3 border-2 border-dashed border-slate-300 rounded-lg text-slate-600 hover:border-slate-400 hover:text-slate-800 transition-colors flex items-center justify-center"
-    >
-      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-      </svg>
-      Tambah Anggota Tim
-    </button>
-
-    <!-- Role Info -->
-    <div class="bg-slate-50 rounded-lg p-4 text-sm">
-      <h4 class="font-medium text-slate-900 mb-2">Perbedaan Peran:</h4>
-      <ul class="space-y-2 text-slate-600">
-        <li class="flex items-start">
-          <span class="font-medium text-slate-800 w-20">Petugas:</span>
-          <span>Bisa input data muzaki, mengelola distribusi di sektor tertentu</span>
-        </li>
-        <li class="flex items-start">
-          <span class="font-medium text-slate-800 w-20">Viewer:</span>
-          <span>Hanya bisa melihat dashboard dan laporan, tidak bisa input/edit data</span>
-        </li>
-      </ul>
     </div>
 
-    <!-- Navigation -->
-    <div class="flex justify-between pt-4 border-t">
-      <a href="/onboarding/langkah-3" class="btn-secondary">
-        <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-        Kembali
-      </a>
-      <div class="flex gap-3">
-        <button type="submit" formaction="?/skip" class="btn-secondary">
-          Lewati
-        </button>
-        <button type="submit" class="btn-primary">
-          Selesai
-          <svg class="w-4 h-4 ml-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-          </svg>
-        </button>
+    <!-- Team Members (optional) -->
+    <div>
+      <label for="teamEmails" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+        Email Anggota Tim (opsional)
+      </label>
+      <textarea
+        id="teamEmails"
+        name="teamEmails"
+        placeholder="Masukkan email petugas, pisahkan dengan koma atau baris baru"
+        class="input w-full"
+        rows="3"
+      ></textarea>
+      <p class="mt-1 text-xs text-slate-500">Contoh: petugas1@email.com, petugas2@email.com</p>
+    </div>
+
+    <!-- Role Selection -->
+    <div>
+      <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+        Role untuk Anggota Tim
+      </label>
+      <div class="space-y-2">
+        <label class="flex items-center p-3 rounded-lg border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
+          <input type="radio" name="teamRole" value="petugas" checked class="mr-3" />
+          <div>
+            <p class="font-medium text-slate-900 dark:text-white">Petugas</p>
+            <p class="text-sm text-slate-500">Bisa mencatat dan mengedit data muzaki/mustahik</p>
+          </div>
+        </label>
+        <label class="flex items-center p-3 rounded-lg border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
+          <input type="radio" name="teamRole" value="viewer" class="mr-3" />
+          <div>
+            <p class="font-medium text-slate-900 dark:text-white">Viewer</p>
+            <p class="text-sm text-slate-500">Hanya bisa melihat data, tidak bisa mengedit</p>
+          </div>
+        </label>
       </div>
+    </div>
+
+    {#if errors?.team}
+      <p class="text-sm text-red-500">{errors.team}</p>
+    {/if}
+
+    <div class="flex justify-end gap-3 pt-4">
+      <button type="submit" class="btn-primary px-8 py-3">
+        Selesai →
+      </button>
     </div>
   </form>
 </div>

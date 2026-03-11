@@ -45,90 +45,56 @@
   }
 </script>
 
-<div class="min-h-screen flex items-center justify-center py-12 px-4 grain" style="background-color: var(--bg-primary);">
+<svelte:head>
+  <title>Verifikasi Email | ZakatApp</title>
+</svelte:head>
+
+<div class="min-h-screen flex items-center justify-center px-4 grain" style="background-color: var(--bg-primary);">
   <div class="absolute inset-0 pointer-events-none">
     <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full blur-3xl" style="background-color: var(--accent-bg); opacity: 0.5;"></div>
   </div>
   
   <div class="w-full max-w-md relative z-10">
-    <div class="text-center mb-8">
-      <a href="/" class="inline-flex items-center gap-3 group">
-        <div class="w-12 h-12 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-105" style="background-color: var(--accent-primary);">
-          <Hexagon class="w-6 h-6" style="color: #0a0a0a;" strokeWidth={2.5} />
-        </div>
-      </a>
-    </div>
-    
     <div class="card-elevated p-8 text-center">
-      <!-- Icon -->
-      <div class="mb-6">
-        <div class="w-20 h-20 rounded-full flex items-center justify-center mx-auto" style="background-color: var(--accent-bg);">
-          <Mail class="w-10 h-10" style="color: var(--accent-primary);" />
-        </div>
+      <div class="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-6">
+        <Mail class="w-10 h-10 text-blue-600" />
       </div>
       
-      <!-- Title -->
-      <h1 class="font-display text-display-xs mb-3" style="color: var(--text-primary);">
-        Verify Your Email
-      </h1>
-      
-      <!-- Message -->
+      <h1 class="text-2xl font-bold mb-2" style="color: var(--text-primary);">Cek Email Anda</h1>
       <p class="mb-6" style="color: var(--text-secondary);">
-        We've sent a verification email to
-        <span class="font-medium" style="color: var(--text-primary);">{email || 'your email address'}</span>.
-        Please check your inbox and click the link to verify your account.
+        Kami telah mengirimkan link verifikasi ke <strong style="color: var(--text-primary);">{email || 'email Anda'}</strong>. Silakan cek inbox dan klik link untuk verifikasi.
       </p>
       
-      <!-- Info box -->
-      <div class="rounded-xl p-4 mb-6" style="background-color: var(--bg-hover); border: 1px solid var(--border-primary);">
-        <p class="text-sm" style="color: var(--text-secondary);">
-          <span class="font-medium" style="color: var(--accent-primary);">Tip:</span> 
-          If you don't see the email, check your spam or junk folder. 
-          The link will expire in 24 hours.
+      <div class="bg-slate-50 rounded-lg p-4 mb-6 text-left">
+        <p class="text-sm text-slate-600">
+          <strong>Tip:</strong> Jika tidak menemukan email di inbox, cek folder spam atau junk.
         </p>
       </div>
       
-      <!-- Resend message -->
       {#if resendMessage}
-        <div class="mb-4 p-3 rounded-lg text-sm" style="background-color: {isSuccess ? 'var(--success-bg)' : 'var(--error-bg)'}; color: {isSuccess ? 'var(--success)' : 'var(--error)'};">
-          {resendMessage}
+        <div class="p-4 rounded-lg mb-4 {isSuccess ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}">
+          <p class="text-sm {isSuccess ? 'text-green-600' : 'text-red-600'}">{resendMessage}</p>
         </div>
       {/if}
       
-      <!-- Actions -->
       <div class="space-y-3">
         <button
           onclick={resendEmail}
-          disabled={resending || !email}
-          class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-medium transition disabled:opacity-50 cursor-pointer"
-          style="background-color: transparent; border: 1px solid var(--border-primary); color: var(--text-secondary);"
+          disabled={resending}
+          class="w-full flex items-center justify-center gap-2 btn-primary disabled:opacity-50"
         >
           {#if resending}
             <RefreshCw class="w-4 h-4 animate-spin" />
-            Sending...
+            Mengirim...
           {:else}
             <RefreshCw class="w-4 h-4" />
-            Resend Verification Email
+            Kirim Ulang Email
           {/if}
         </button>
         
-        <a 
-          href="/login" 
-          class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-medium transition btn-primary"
-        >
-          Go to Login
-        </a>
-      </div>
-      
-      <!-- Back link -->
-      <div class="mt-6">
-        <a 
-          href="/register" 
-          class="inline-flex items-center gap-2 text-sm transition cursor-pointer"
-          style="color: var(--text-secondary);"
-        >
+        <a href="/login" class="w-full flex items-center justify-center gap-2 btn-secondary">
           <ArrowLeft class="w-4 h-4" />
-          Back to Register
+          Kembali ke Login
         </a>
       </div>
     </div>

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { page } from '$app/state';
   import type { LayoutProps } from './$types';
   import AppSidebar from '$lib/components/AppSidebar.svelte';
   import { theme } from '$lib/stores/theme.svelte';
@@ -8,6 +9,9 @@
   
   // User dari server load (dari hooks.server.ts)
   let user = $derived(data.user);
+  
+  // Check if this is an organization route
+  let isOrgRoute = $derived(page.url?.pathname?.startsWith('/o/'));
   
   // Initialize theme
   theme.init();
@@ -23,7 +27,9 @@
 </script>
 
 <div class="min-h-screen flex grain" style="background-color: var(--bg-primary);">
-  <AppSidebar {user} onLogout={handleLogout} />
+  {#if !isOrgRoute}
+    <AppSidebar {user} onLogout={handleLogout} />
+  {/if}
   
   <main class="flex-1 min-w-0 lg:ml-0 ml-0">
     {#if user}

@@ -22,7 +22,6 @@ export interface OnboardingStep3Data {
   sectors: Array<{
     name: string;
     color?: string;
-    description?: string;
   }>;
 }
 
@@ -213,7 +212,6 @@ export class OnboardingService {
           id: sectorId,
           organization_id: orgId,
           name: sector.name,
-          description: sector.description || null,
           color: sector.color || '#3b82f6',
           is_active: 1,
           created_at: now,

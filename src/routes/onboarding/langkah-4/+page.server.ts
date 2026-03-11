@@ -14,32 +14,37 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
-	skip: async ({ locals }) => {
-		const onboardingService = new OnboardingService(locals.db);
-		await onboardingService.saveStep4(locals.user!.id, { skip: true, members: [] });
-		
-		// Complete onboarding
-		const result = await onboardingService.completeOnboarding(locals.user!.id);
-		throw redirect(302, `/o/${result.slug}/dashboard`);
-	},
-	
 	default: async ({ request, locals }) => {
 		const formData = await request.formData();
+		
+		// Check if user wants to skip
+		const skip = formData.get('skip') === 'true';
+		
+		const onboardingService = new OnboardingService(locals.db);
+		
+		if (skip) {
+			// Skip adding members
+			await onboardingService.saveStep4(locals.user!.id, { skip: true, members: [] });
+			
+			// Complete onboarding
+			const result = await onboardingService.completeOnboarding(locals.user!.id);
+			throw redirect(302, `/o/${result.slug}/dashboard`);
+		}
 		
 		// Parse members from form data
 		const members: Array<{ name: string; email: string; role: 'petugas' | 'viewer'; sectorId?: string }> = [];
 		let index = 0;
 		
-		while (formData.has(`members[${index}].name`)) {
-			const name = formData.get(`members[${index}].name`)?.toString().trim();
-			const email = formData.get(`members[${index}].email`)?.toString().trim();
+		while (formData.has(`members[${index}][name]`)) {
+			const name = formData.get(`members[${index}][name]`)?.toString().trim();
+			const email = formData.get(`members[${index}][email]`)?.toString().trim();
 			
 			if (name && email) {
 				members.push({
 					name,
 					email,
-					role: (formData.get(`members[${index}].role`)?.toString() as 'petugas' | 'viewer') || 'petugas',
-					sectorId: formData.get(`members[${index}].sectorId`)?.toString() || undefined
+					role: (formData.get(`members[${index}][role]`)?.toString() as 'petugas' | 'viewer') || 'petugas',
+					sectorId: formData.get(`members[${index}][sectorId]`)?.toString() || undefined
 				});
 			}
 			index++;
@@ -59,7 +64,6 @@ export const actions: Actions = {
 		}
 		
 		// Save step data
-		const onboardingService = new OnboardingService(locals.db);
 		await onboardingService.saveStep4(locals.user!.id, { skip: false, members });
 		
 		// Complete onboarding

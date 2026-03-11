@@ -28,9 +28,9 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		
 		const defaultBerasPerJiwa = parseFloat(formData.get('defaultBerasPerJiwa')?.toString() || '2.5');
-		const defaultUangPerJiwa = parseInt(formData.get('defaultUangPerJiwa')?.toString() || '40000');
-		const yearHijri = parseInt(formData.get('yearHijri')?.toString() || '1446');
-		const yearMasehi = parseInt(formData.get('yearMasehi')?.toString() || '2025');
+		const defaultUangPerJiwa = parseInt(formData.get('defaultUangPerJiwa')?.toString() || '50000');
+		const yearHijri = parseInt(formData.get('yearHijri')?.toString() || '1447');
+		const yearMasehi = parseInt(formData.get('yearMasehi')?.toString() || '2026');
 		const periodName = formData.get('periodName')?.toString().trim() || `Ramadhan ${yearHijri} H`;
 		
 		// Validation

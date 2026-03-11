@@ -5,6 +5,10 @@
   const user = data.user;
 </script>
 
+<svelte:head>
+  <title>Pilih Organisasi | ZakatApp</title>
+</svelte:head>
+
 <div class="min-h-screen bg-slate-50 flex items-center justify-center p-4">
   <div class="w-full max-w-4xl">
     <div class="text-center mb-8">

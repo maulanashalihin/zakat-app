@@ -2,110 +2,57 @@
   import '../app.css';
   import { page } from '$app/state';
   import { Hexagon, Sun, Moon } from 'lucide-svelte';
-  import { onMount } from 'svelte';
   import { theme } from '$lib/stores/theme.svelte';
   
   let { children } = $props();
   
-  // Routes that use full-width layout without header
-  let isDashboardRoute = $derived(
-    page.url.pathname.startsWith('/dashboard') || 
-    page.url.pathname === '/profile'
-  );
-  
-  // Auth pages - completely clean layout
-  let isAuthPage = $derived(
-    ['/login', '/register', '/forgot-password', '/reset-password'].some(
-      path => page.url.pathname.startsWith(path)
-    )
-  );
-  
-  // Home page - special layout with footer
+  let isDashboardRoute = $derived(page.url.pathname.startsWith('/dashboard') || page.url.pathname.startsWith('/admin') || page.url.pathname.startsWith('/o/'));
+  let isAuthPage = $derived(['/login', '/register', '/forgot-password', '/reset-password'].some(path => page.url.pathname.startsWith(path)));
+  let isOnboarding = $derived(page.url.pathname.startsWith('/onboarding'));
   let isHomePage = $derived(page.url.pathname === '/');
   
-  onMount(() => {
-    theme.init();
-  });
+  function toggleTheme() {
+    theme.toggle();
+  }
 </script>
 
 {#if isAuthPage}
-  <!-- Auth pages: Clean layout, no header/footer -->
   {@render children()}
 {:else if isDashboardRoute}
-  <!-- Dashboard routes: Managed by (dashboard) group layout -->
+  {@render children()}
+{:else if isHomePage}
   {@render children()}
 {:else}
-  <!-- Public pages: Standard layout with header -->
-  <div class="min-h-screen flex flex-col grain" style="background-color: var(--bg-primary);">
-    <header class="sticky top-0 z-50 backdrop-blur-xl" style="background-color: color-mix(in srgb, var(--bg-primary), transparent 20%); border-bottom: 1px solid var(--border-primary);">
-      <div class="container-wide">
+  <div class="min-h-screen flex flex-col grain" style="background-color: var(--bg-primary); --border-color: transparent;">
+    <header class="fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b border-transparent transition-colors"
+            style="background-color: color-mix(in srgb, var(--bg-primary), transparent 20%);">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
-          <!-- Logo -->
-          <a href="/" class="flex items-center gap-3 group">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center transition-transform duration-300 group-hover:scale-105" style="background-color: var(--accent-primary);">
-              <Hexagon class="w-5 h-5" style="color: #0a0a0a;" strokeWidth={2.5} />
-            </div>
-            <span class="font-display font-bold text-lg" style="color: var(--text-primary);">Studio</span>
+          <a href="/" class="flex items-center gap-2">
+            <Hexagon class="w-8 h-8 text-green-600" />
+            <span class="font-bold text-xl" style="color: var(--text-primary);">ZakatApp</span>
           </a>
-          
-          <!-- Navigation -->
-          <div class="flex items-center gap-4">
-            <!-- Theme Toggle -->
-            <button
-              type="button"
-              onclick={() => theme.toggle()}
-              class="p-2 rounded-lg transition-colors cursor-pointer"
-              style="color: var(--text-secondary); hover:color: var(--text-primary);"
-              aria-label="Toggle theme"
-            >
+          <nav class="hidden md:flex items-center gap-6">
+            <a href="/" class="text-sm font-medium transition-colors" style="color: var(--text-secondary);">Beranda</a>
+            <a href="/login" class="text-sm font-medium transition-colors hover:text-green-600" style="color: var(--text-secondary);">Masuk</a>
+          </nav>
+          <div class="flex items-center gap-3">
+            <button onclick={toggleTheme} class="p-2 rounded-lg transition-colors" style="color: var(--text-secondary);" aria-label="Toggle theme">
               {#if theme.current === 'dark'}
                 <Sun class="w-5 h-5" />
               {:else}
                 <Moon class="w-5 h-5" />
               {/if}
             </button>
-            
-            <nav class="flex items-center gap-1">
-              <a 
-                href="/login" 
-                class="px-4 py-2 text-sm font-medium transition-colors"
-                style="color: var(--text-secondary);"
-              >
-                Sign In
-              </a>
-              <a 
-                href="/register" 
-                class="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
-                style="background-color: var(--accent-primary); color: #0a0a0a;"
-              >
-                Get Started
-              </a>
-            </nav>
+            <a href="/register" class="hidden sm:inline-flex">
+              <button class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors">Daftar</button>
+            </a>
           </div>
         </div>
       </div>
     </header>
-    
-    <main class="flex-1">
+    <main class="flex-1 pt-16">
       {@render children()}
     </main>
-    
-    {#if isHomePage}
-      <footer class="py-12" style="border-top: 1px solid var(--border-primary);">
-        <div class="container-wide">
-          <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: var(--accent-primary);">
-                <Hexagon class="w-4 h-4" style="color: #0a0a0a;" strokeWidth={2.5} />
-              </div>
-              <span class="font-display font-semibold" style="color: var(--text-primary);">Studio</span>
-            </div>
-            <p style="color: var(--text-muted);">
-              Crafted with precision
-            </p>
-          </div>
-        </div>
-      </footer>
-    {/if}
   </div>
 {/if}

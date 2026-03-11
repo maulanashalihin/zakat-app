@@ -1,16 +1,20 @@
 <script>
   let { data, form } = $props();
   
-  const defaults = data.defaults;
-  const savedData = data.savedData;
-  const values = form?.values || savedData || defaults;
-  const errors = form?.errors || {};
+  const defaults = $derived(data.defaults);
+  const savedData = $derived(data.savedData);
+  const values = $derived(form?.values || savedData || defaults);
+  const errors = $derived(form?.errors || {});
 </script>
 
-<div class="bg-white rounded-lg shadow-sm p-6">
+<svelte:head>
+  <title>Setup Zakat - ZakatApp</title>
+</svelte:head>
+
+<div class="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 p-6">
   <div class="mb-6">
-    <h2 class="text-2xl font-bold text-slate-900">Setting Zakat</h2>
-    <p class="text-slate-600 mt-1">
+    <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Setting Zakat</h2>
+    <p class="text-slate-600 dark:text-slate-400 mt-1">
       Tentukan nilai zakat dan periode pengumpulan
     </p>
   </div>
@@ -20,7 +24,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <!-- Beras per Jiwa -->
       <div>
-        <label for="defaultBerasPerJiwa" class="block text-sm font-medium text-slate-700 mb-1">
+        <label for="defaultBerasPerJiwa" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
           Beras per Jiwa <span class="text-red-500">*</span>
         </label>
         <div class="relative">
@@ -28,139 +32,89 @@
             type="number"
             id="defaultBerasPerJiwa"
             name="defaultBerasPerJiwa"
-            value={values.defaultBerasPerJiwa}
+            value={values.defaultBerasPerJiwa || 2.5}
             step="0.1"
-            min="0"
-            class="input w-full pr-12 {errors.defaultBerasPerJiwa ? 'border-red-500' : ''}"
+            min="0.5"
+            max="10"
+            class="input w-full pr-12"
             required
           />
-          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">kg</span>
+          <span class="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-500">kg</span>
         </div>
-        {#if errors.defaultBerasPerJiwa}
-          <p class="text-red-500 text-sm mt-1">{errors.defaultBerasPerJiwa}</p>
-        {:else}
-          <p class="text-slate-500 text-sm mt-1">Standar: 2.5 kg</p>
+        <p class="mt-1 text-xs text-slate-500">Standar: 2.5 kg atau 3.5 kg</p>
+        {#if errors?.defaultBerasPerJiwa}
+          <p class="mt-1 text-sm text-red-500">{errors.defaultBerasPerJiwa}</p>
         {/if}
       </div>
 
       <!-- Uang per Jiwa -->
       <div>
-        <label for="defaultUangPerJiwa" class="block text-sm font-medium text-slate-700 mb-1">
+        <label for="defaultUangPerJiwa" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
           Uang per Jiwa <span class="text-red-500">*</span>
         </label>
         <div class="relative">
-          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">Rp</span>
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-500">Rp</span>
           <input
             type="number"
             id="defaultUangPerJiwa"
             name="defaultUangPerJiwa"
-            value={values.defaultUangPerJiwa}
+            value={values.defaultUangPerJiwa || 40000}
             step="1000"
-            min="0"
-            class="input w-full pl-10 {errors.defaultUangPerJiwa ? 'border-red-500' : ''}"
+            min="10000"
+            max="200000"
+            class="input w-full pl-10"
             required
           />
         </div>
-        {#if errors.defaultUangPerJiwa}
-          <p class="text-red-500 text-sm mt-1">{errors.defaultUangPerJiwa}</p>
-        {:else}
-          <p class="text-slate-500 text-sm mt-1">Standar: Rp 40.000</p>
+        <p class="mt-1 text-xs text-slate-500">Standar: Rp 35.000 - Rp 50.000</p>
+        {#if errors?.defaultUangPerJiwa}
+          <p class="mt-1 text-sm text-red-500">{errors.defaultUangPerJiwa}</p>
         {/if}
       </div>
     </div>
 
-    <!-- Period Info -->
-    <div class="border-t pt-6">
-      <h3 class="text-lg font-medium text-slate-900 mb-4">Periode Zakat</h3>
-      
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Tahun Hijriyah -->
-        <div>
-          <label for="yearHijri" class="block text-sm font-medium text-slate-700 mb-1">
-            Tahun Hijriyah <span class="text-red-500">*</span>
-          </label>
-          <input
-            type="number"
-            id="yearHijri"
-            name="yearHijri"
-            value={values.yearHijri}
-            min="1400"
-            max="1500"
-            class="input w-full {errors.yearHijri ? 'border-red-500' : ''}"
-            required
-          />
-          {#if errors.yearHijri}
-            <p class="text-red-500 text-sm mt-1">{errors.yearHijri}</p>
-          {/if}
-        </div>
+    <!-- Date Range -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <label for="startDate" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+          Tanggal Mulai
+        </label>
+        <input
+          type="date"
+          id="startDate"
+          name="startDate"
+          value={values.startDate || ''}
+          class="input w-full"
+        />
+      </div>
 
-        <!-- Tahun Masehi -->
-        <div>
-          <label for="yearMasehi" class="block text-sm font-medium text-slate-700 mb-1">
-            Tahun Masehi <span class="text-red-500">*</span>
-          </label>
-          <input
-            type="number"
-            id="yearMasehi"
-            name="yearMasehi"
-            value={values.yearMasehi}
-            min="2000"
-            max="2100"
-            class="input w-full {errors.yearMasehi ? 'border-red-500' : ''}"
-            required
-          />
-          {#if errors.yearMasehi}
-            <p class="text-red-500 text-sm mt-1">{errors.yearMasehi}</p>
-          {/if}
-        </div>
-
-        <!-- Nama Periode -->
-        <div>
-          <label for="periodName" class="block text-sm font-medium text-slate-700 mb-1">
-            Nama Periode <span class="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            id="periodName"
-            name="periodName"
-            value={values.periodName}
-            placeholder="Ramadhan 1446 H"
-            class="input w-full"
-            required
-          />
-        </div>
+      <div>
+        <label for="endDate" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+          Tanggal Berakhir
+        </label>
+        <input
+          type="date"
+          id="endDate"
+          name="endDate"
+          value={values.endDate || ''}
+          class="input w-full"
+        />
       </div>
     </div>
 
-    <!-- Info Box -->
-    <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
-      <div class="flex items-start">
-        <svg class="w-5 h-5 text-amber-600 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <div class="text-sm text-amber-800">
-          <p class="font-medium">Catatan</p>
-          <p class="mt-1">
-            Setting ini bisa diubah nanti melalui menu Pengaturan. 
-            Nilai default hanya sebagai patokan awal perhitungan zakat.
-          </p>
-        </div>
-      </div>
+    <!-- Summary Card -->
+    <div class="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
+      <h3 class="font-medium text-slate-900 dark:text-white mb-2">Ringkasan Setting</h3>
+      <ul class="text-sm text-slate-600 dark:text-slate-400 space-y-1">
+        <li>• Setiap jiwa membayar <strong>{values.defaultBerasPerJiwa || 2.5} kg</strong> beras atau <strong>Rp {(values.defaultUangPerJiwa || 40000).toLocaleString()}</strong></li>
+        <li>• Keluarga 5 jiwa akan membayar <strong>{(values.defaultBerasPerJiwa || 2.5) * 5} kg</strong> beras</li>
+        <li>• Anda bisa mengubah setting ini kapan saja</li>
+      </ul>
     </div>
 
-    <!-- Navigation -->
-    <div class="flex justify-between pt-4 border-t">
-      <a href="/onboarding/langkah-1" class="btn-secondary">
-        <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-        Kembali
-      </a>
-      <button type="submit" class="btn-primary">
-        Lanjut ke Langkah 3
-        <svg class="w-4 h-4 ml-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-        </svg>
+    <div class="flex justify-end gap-3">
+      <button type="submit" class="btn-primary px-8 py-3">
+        Lanjutkan →
       </button>
     </div>
   </form>

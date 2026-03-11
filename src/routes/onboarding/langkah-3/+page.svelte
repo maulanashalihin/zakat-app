@@ -1,117 +1,80 @@
 <script>
   let { data, form } = $props();
   
-  // Initialize sectors array
-  let sectors = $state(form?.values?.sectors || data?.savedData?.sectors || [
-    { name: '', color: '#3b82f6', description: '' }
-  ]);
+  const savedSectors = $derived(data.savedSectors || []);
+  const errors = $derived(form?.errors || {});
   
-  const errors = form?.errors || {};
+  // Initialize with saved sectors or default 3 empty ones
+  let sectors = $state(
+    savedSectors.length > 0 
+      ? savedSectors.map((s, i) => ({ 
+          id: crypto.randomUUID(), 
+          name: s.name || '', 
+          color: s.color || getDefaultColor(i) 
+        }))
+      : [
+          { id: crypto.randomUUID(), name: '', color: '#22c55e' },
+          { id: crypto.randomUUID(), name: '', color: '#3b82f6' },
+          { id: crypto.randomUUID(), name: '', color: '#f59e0b' }
+        ]
+  );
   
-  // Suggested colors
-  const colorOptions = [
-    '#3b82f6', // blue
-    '#10b981', // green
-    '#f59e0b', // amber
-    '#ef4444', // red
-    '#8b5cf6', // violet
-    '#06b6d4', // cyan
-    '#ec4899', // pink
-    '#84cc16', // lime
-  ];
-  
-  // Suggested sector names
-  const suggestedNames = ['Banjaran', 'Cangkuang', 'Pangalengan', 'Arjasari', 'Cimaung', 'Margahayu'];
+  function getDefaultColor(index) {
+    const colors = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316'];
+    return colors[index % colors.length];
+  }
   
   function addSector() {
-    sectors = [...sectors, { name: '', color: colorOptions[sectors.length % colorOptions.length], description: '' }];
+    sectors = [...sectors, { 
+      id: crypto.randomUUID(), 
+      name: '', 
+      color: getDefaultColor(sectors.length) 
+    }];
   }
   
   function removeSector(index) {
-    if (sectors.length > 1) {
-      sectors = sectors.filter((_, i) => i !== index);
-    }
-  }
-  
-  function useSuggestion(name) {
-    // Check if already used
-    const existing = sectors.find(s => s.name.toLowerCase() === name.toLowerCase());
-    if (!existing) {
-      if (sectors.length === 1 && sectors[0].name === '') {
-        sectors[0].name = name;
-      } else {
-        sectors = [...sectors, { name, color: colorOptions[sectors.length % colorOptions.length], description: '' }];
-      }
-    }
+    sectors = sectors.filter((_, i) => i !== index);
   }
 </script>
 
-<div class="bg-white rounded-lg shadow-sm p-6">
+<svelte:head>
+  <title>Setup Sektor - ZakatApp</title>
+</svelte:head>
+
+<div class="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 p-6">
   <div class="mb-6">
-    <h2 class="text-2xl font-bold text-slate-900">Buat Sektor/Wilayah</h2>
-    <p class="text-slate-600 mt-1">
-      Tentukan wilayah pengumpulan zakat
+    <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Sektor Zakat</h2>
+    <p class="text-slate-600 dark:text-slate-400 mt-1">
+      Buat sektor untuk memudahkan pembagian wilayah pengumpulan
     </p>
   </div>
 
-  <!-- Suggested Names -->
-  <div class="mb-6">
-    <p class="text-sm text-slate-600 mb-2">Nama yang sering digunakan:</p>
-    <div class="flex flex-wrap gap-2">
-      {#each suggestedNames as name}
-        <button
-          type="button"
-          onclick={() => useSuggestion(name)}
-          class="text-sm px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-700 transition-colors"
-        >
-          + {name}
-        </button>
-      {/each}
-    </div>
-  </div>
-
-  <form method="POST" class="space-y-4">
-    {#if errors.sectors}
-      <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p class="text-red-600 text-sm">{errors.sectors}</p>
-      </div>
-    {/if}
-
+  <form method="POST" class="space-y-6">
     <!-- Sectors List -->
-    <div class="space-y-4">
-      {#each sectors as sector, i (i)}
-        <div class="flex gap-3 items-start p-4 bg-slate-50 rounded-lg">
-          <!-- Color Picker -->
-          <div class="flex flex-wrap gap-1 w-20">
-            {#each colorOptions.slice(0, 4) as color}
-              <button
-                type="button"
-                onclick={() => sectors[i].color = color}
-                class="w-6 h-6 rounded-full border-2 transition-all {sector.color === color ? 'border-slate-900 scale-110' : 'border-transparent'}"
-                style="background-color: {color}"
-              ></button>
-            {/each}
-          </div>
-          
-          <!-- Name Input -->
+    <div class="space-y-3">
+      {#each sectors as sector, i (sector.id)}
+        <div class="flex gap-3 items-start">
           <div class="flex-1">
             <input
               type="text"
-              name="sectors[{i}].name"
-              bind:value={sectors[i].name}
-              placeholder="Nama sektor/wilayah"
+              name="sectorNames"
+              bind:value={sector.name}
+              placeholder="Nama sektor (contoh: Sektor Utara)"
               class="input w-full"
               required
             />
-            <input type="hidden" name="sectors[{i}].color" bind:value={sectors[i].color} />
           </div>
-          
-          <!-- Remove Button -->
+          <input
+            type="color"
+            name="sectorColors"
+            bind:value={sector.color}
+            class="w-12 h-11 rounded-lg border border-slate-200 dark:border-slate-700 cursor-pointer"
+          />
           {#if sectors.length > 1}
             <button
               type="button"
               onclick={() => removeSector(i)}
-              class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+              class="p-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
               title="Hapus sektor"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -123,47 +86,42 @@
       {/each}
     </div>
 
-    <!-- Add Button -->
+    <!-- Add Sector Button -->
     <button
       type="button"
       onclick={addSector}
-      class="w-full py-3 border-2 border-dashed border-slate-300 rounded-lg text-slate-600 hover:border-slate-400 hover:text-slate-800 transition-colors flex items-center justify-center"
+      class="w-full py-3 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors flex items-center justify-center gap-2"
     >
-      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
       </svg>
       Tambah Sektor
     </button>
 
-    <!-- Info Box -->
-    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-      <div class="flex items-start">
-        <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <div class="text-sm text-blue-800">
-          <p class="font-medium">Tips</p>
-          <p class="mt-1">
-            Sektor membantu membagi wilayah pengumpulan. Setiap petugas bisa ditugaskan 
-            ke sektor tertentu. Minimal 1 sektor diperlukan.
-          </p>
-        </div>
+    {#if errors?.sectors}
+      <p class="text-sm text-red-500">{errors.sectors}</p>
+    {/if}
+
+    <!-- Preview -->
+    <div class="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
+      <h3 class="font-medium text-slate-900 dark:text-white mb-3">Preview Sektor</h3>
+      <div class="flex flex-wrap gap-2">
+        {#each sectors as sector}
+          {#if sector.name}
+            <span
+              class="px-3 py-1 rounded-full text-sm font-medium"
+              style="background-color: {sector.color}20; color: {sector.color}; border: 1px solid {sector.color}40;"
+            >
+              {sector.name}
+            </span>
+          {/if}
+        {/each}
       </div>
     </div>
 
-    <!-- Navigation -->
-    <div class="flex justify-between pt-4 border-t">
-      <a href="/onboarding/langkah-2" class="btn-secondary">
-        <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-        Kembali
-      </a>
-      <button type="submit" class="btn-primary">
-        Lanjut ke Langkah 4
-        <svg class="w-4 h-4 ml-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-        </svg>
+    <div class="flex justify-end gap-3">
+      <button type="submit" class="btn-primary px-8 py-3">
+        Lanjutkan →
       </button>
     </div>
   </form>
