@@ -101,6 +101,13 @@ export const GET: RequestHandler = async ({ url, cookies, locals, platform }) =>
 			userId = user.id;
 		}
 
+		// Get user data for redirect decision
+		const userData = await locals.db
+			.selectFrom('users')
+			.where('id', '=', userId)
+			.select(['role', 'organization_id'])
+			.executeTakeFirst();
+
 		// Create session
 		const session = await createSession(locals.db, userId);
 		const sessionCookie = createSessionCookie(session.id);
@@ -109,11 +116,31 @@ export const GET: RequestHandler = async ({ url, cookies, locals, platform }) =>
 		cookies.delete('google_oauth_state', { path: '/' });
 		cookies.delete('google_code_verifier', { path: '/' });
 
-		// Redirect to dashboard with session cookie
+		// Determine redirect URL based on user status
+		let redirectUrl: string;
+
+		if (userData?.role === 'super_admin') {
+			// Super admin goes to admin dashboard
+			redirectUrl = '/admin/dashboard';
+		} else if (userData?.organization_id) {
+			// User with organization - get slug and redirect to org dashboard
+			const org = await locals.db
+				.selectFrom('organizations')
+				.select('slug')
+				.where('id', '=', userData.organization_id)
+				.executeTakeFirst();
+			
+			redirectUrl = org?.slug ? `/o/${org.slug}/dashboard` : '/organizations';
+		} else {
+			// User without organization goes to onboarding to create one
+			redirectUrl = '/onboarding/langkah-1';
+		}
+
+		// Redirect with session cookie
 		return new Response(null, {
 			status: 302,
 			headers: {
-				Location: '/dashboard',
+				Location: redirectUrl,
 				'Set-Cookie': `${sessionCookie.name}=${sessionCookie.value}; Path=${sessionCookie.attributes.path}; HttpOnly${sessionCookie.attributes.secure ? '; Secure' : ''}; SameSite=${sessionCookie.attributes.sameSite}; Max-Age=${sessionCookie.attributes.maxAge}`
 			}
 		});

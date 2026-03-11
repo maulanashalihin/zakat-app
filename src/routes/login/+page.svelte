@@ -1,132 +1,175 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
-  import { Chrome, Mail, Lock, Eye, EyeOff, Loader2, ArrowRight, Hexagon } from 'lucide-svelte';
+  import { Chrome, Mail, Lock, Eye, EyeOff, Loader2, ArrowRight, Building2 } from 'lucide-svelte';
   import { theme } from '$lib/stores/theme.svelte';
-  
+
   let email = $state('');
   let password = $state('');
   let showPassword = $state(false);
   let loading = $state(false);
   let errorMsg = $state('');
-  
+
   onMount(() => {
     theme.init();
   });
-  
+
   async function handleSubmit(event: SubmitEvent) {
     event.preventDefault();
     loading = true;
     errorMsg = '';
-    
+
     try {
       const res = await fetch('/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
-      
-      const data = await res.json() as { message?: string };
-      
+
+      const data = await res.json() as {
+        message?: string;
+        user?: {
+          role: string;
+          organizationId: string | null;
+          organizationSlug: string | null;
+        }
+      };
+
       if (!res.ok) {
         throw new Error(data.message || 'Login failed');
       }
-      
-      goto('/dashboard');
-      
+
+      const user = data.user;
+      if (!user) {
+        throw new Error('User data not received');
+      }
+
+      if (user.role === 'super_admin') {
+        goto('/admin/dashboard');
+        return;
+      }
+
+      if (user.organizationId && user.organizationSlug) {
+        goto(`/o/${user.organizationSlug}/dashboard`);
+        return;
+      }
+
+      goto('/onboarding/langkah-1');
+
     } catch (err: any) {
       errorMsg = err.message;
     } finally {
       loading = false;
     }
   }
-  
+
   function loginWithGoogle() {
     window.location.href = '/auth/google';
   }
 </script>
 
-<div class="min-h-screen flex items-center justify-center py-12 px-4 grain" style="background-color: var(--bg-primary);">
-  <div class="absolute inset-0 pointer-events-none">
-    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full blur-3xl" style="background-color: var(--accent-bg); opacity: 0.5;"></div>
+<svelte:head>
+  <title>Login - ZakatApp</title>
+</svelte:head>
+
+<svelte:window css="selection:bg-primary-500 selection:text-white" />
+
+<div class="min-h-screen flex items-center justify-center py-12 px-4 relative overflow-hidden font-sans selection:bg-primary-500 selection:text-white">
+  <!-- Background Effects -->
+  <div class="absolute inset-0 pointer-events-none -z-10">
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary-400/20 blur-[120px] rounded-full"></div>
+    <div class="absolute top-40 -right-20 w-72 h-72 bg-emerald-300/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob"></div>
+    <div class="absolute top-40 -left-20 w-72 h-72 bg-teal-300/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob animation-delay-2000"></div>
   </div>
-  
+
   <div class="w-full max-w-md relative z-10">
+    <!-- Logo -->
     <div class="text-center mb-8">
       <a href="/" class="inline-flex items-center gap-3 group">
-        <div class="w-12 h-12 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-105" style="background-color: var(--accent-primary);">
-          <Hexagon class="w-6 h-6" style="color: #0a0a0a;" strokeWidth={2.5} />
+        <div class="w-12 h-12 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white shadow-lg shadow-primary-500/40 transition-transform duration-300 group-hover:scale-105">
+          <Building2 class="w-6 h-6" />
         </div>
+        <span class="font-extrabold text-2xl tracking-tight">Zakat<span class="text-primary-600">App</span></span>
       </a>
     </div>
-    
-    <div class="card-elevated p-8">
-      <div class="text-center mb-8">
-        <h1 class="font-display text-display-xs mb-2" style="color: var(--text-primary);">Welcome back</h1>
-        <p style="color: var(--text-secondary);">Sign in to your account</p>
+
+    <!-- Card -->
+    <div class="bg-white/80 backdrop-blur-xl border border-white/40 shadow-[0_20px_50px_rgb(0,0,0,0.1)] rounded-[2rem] p-8 relative transform -rotate-1 hover:rotate-0 transition-transform duration-500">
+      <div class="flex gap-2 mb-6 px-2">
+        <div class="w-3 h-3 rounded-full bg-red-400"></div>
+        <div class="w-3 h-3 rounded-full bg-amber-400"></div>
+        <div class="w-3 h-3 rounded-full bg-green-400"></div>
       </div>
-      
+
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">Selamat Datang</h1>
+        <p class="text-slate-600 font-medium">Masuk ke akun Anda</p>
+      </div>
+
       {#if errorMsg}
-        <div class="mb-6 p-4 rounded-xl text-sm" style="background-color: var(--error-bg); color: var(--error); border: 1px solid var(--error-bg);">
+        <div class="mb-6 p-4 rounded-xl text-sm bg-red-50 text-red-600 border border-red-100">
           {errorMsg}
         </div>
       {/if}
-      
+
+      <!-- Google Button -->
       <button
         onclick={loginWithGoogle}
         disabled={loading}
-        class="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl font-semibold transition disabled:opacity-50 mb-6 cursor-pointer"
-        style="background-color: var(--text-primary); color: var(--bg-primary);"
+        class="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-xl font-bold transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+        style="background-color: #f8fafc; color: #1e293b; border: 1px solid #e2e8f0;"
       >
         <Chrome class="w-5 h-5" />
-        Continue with Google
+        Masuk dengan Google
       </button>
-      
+
+      <!-- Divider -->
       <div class="relative mb-6">
         <div class="absolute inset-0 flex items-center">
-          <div class="divider w-full"></div>
+          <div class="w-full border-t border-slate-200"></div>
         </div>
         <div class="relative flex justify-center text-xs">
-          <span class="px-4" style="background-color: var(--bg-secondary); color: var(--text-muted);">or continue with email</span>
+          <span class="px-4 bg-white text-slate-400 font-medium">atau masuk dengan email</span>
         </div>
       </div>
-      
+
+      <!-- Form -->
       <form onsubmit={handleSubmit} class="space-y-5">
         <div>
-          <label for="email" class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">
-            Email Address
+          <label for="email" class="block text-sm font-bold text-slate-700 mb-2">
+            Alamat Email
           </label>
           <div class="relative">
-            <Mail class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style="color: var(--text-muted);" />
+            <Mail class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
             <input
               id="email"
               type="email"
               bind:value={email}
               required
-              class="input pl-12"
+              class="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
               placeholder="you@example.com"
             />
           </div>
         </div>
-        
+
         <div>
           <div class="flex items-center justify-between mb-2">
-            <label for="password" class="text-sm font-medium" style="color: var(--text-secondary);">
+            <label for="password" class="text-sm font-bold text-slate-700">
               Password
             </label>
-            <a href="/forgot-password" class="text-sm transition-colors" style="color: var(--accent-primary);">
-              Forgot?
+            <a href="/forgot-password" class="text-sm font-medium text-primary-600 hover:text-primary-500 transition-colors">
+              Lupa?
             </a>
           </div>
           <div class="relative">
-            <Lock class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style="color: var(--text-muted);" />
+            <Lock class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
             {#if showPassword}
               <input
                 id="password"
                 type="text"
                 bind:value={password}
                 required
-                class="input pl-12 pr-12"
+                class="w-full pl-12 pr-12 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
                 placeholder="••••••••"
               />
             {:else}
@@ -135,15 +178,14 @@
                 type="password"
                 bind:value={password}
                 required
-                class="input pl-12 pr-12"
+                class="w-full pl-12 pr-12 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
                 placeholder="••••••••"
               />
             {/if}
             <button
               type="button"
               onclick={() => showPassword = !showPassword}
-              class="absolute right-4 top-1/2 -translate-y-1/2 transition-colors cursor-pointer"
-              style="color: var(--text-muted);"
+              class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
             >
               {#if showPassword}
                 <EyeOff class="w-5 h-5" />
@@ -153,27 +195,27 @@
             </button>
           </div>
         </div>
-        
+
         <button
           type="submit"
           disabled={loading}
-          class="btn-primary w-full cursor-pointer"
+          class="w-full flex items-center justify-center gap-2 py-4 px-6 bg-primary-600 hover:bg-primary-500 text-white rounded-xl font-bold text-lg transition-all duration-200 shadow-[0_0_40px_-10px_rgba(16,185,129,0.5)] hover:shadow-[0_0_60px_-15px_rgba(16,185,129,0.7)] hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
         >
           {#if loading}
             <Loader2 class="w-5 h-5 animate-spin" />
-            Signing in...
+            Memasuki...
           {:else}
-            Sign In
-            <ArrowRight class="w-4 h-4" />
+            Masuk
+            <ArrowRight class="w-5 h-5" />
           {/if}
         </button>
       </form>
     </div>
-    
-    <p class="text-center mt-6" style="color: var(--text-secondary);">
-      Don't have an account?
-      <a href="/register" class="font-medium transition-colors" style="color: var(--accent-primary);">
-        Create one
+
+    <p class="text-center mt-8 text-slate-600 font-medium">
+      Belum punya akun?
+      <a href="/register" class="text-primary-600 hover:text-primary-500 font-bold transition-colors">
+        Daftar Gratis
       </a>
     </p>
   </div>
