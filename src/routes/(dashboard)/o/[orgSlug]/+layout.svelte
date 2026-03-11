@@ -1,6 +1,6 @@
 <script>
   import { page } from '$app/state';
-  import { Sun, Moon, Menu, X, Building2, Users, HandHeart, MapPin, Settings, UsersRound, FileText, Calendar, LogOut } from 'lucide-svelte';
+  import { Sun, Moon, Menu, X, Building2, Users, User, HandHeart, MapPin, Settings, UsersRound, FileText, Calendar, LogOut } from 'lucide-svelte';
   import { theme } from '$lib/stores/theme.svelte';
 
   let { children, data } = $props();
