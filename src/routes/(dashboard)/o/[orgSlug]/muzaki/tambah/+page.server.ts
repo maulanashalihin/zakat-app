@@ -15,9 +15,14 @@ export const load: PageServerLoad = async ({ parent }) => {
 };
 
 export const actions: Actions = {
-	default: async ({ request, locals, params }) => {
+	default: async ({ request, locals }) => {
+		// ✅ FIXED: Use locals.user.organizationId directly
+		if (!locals.user) {
+			throw fail(401, { error: 'Unauthorized' });
+		}
+
 		const formData = await request.formData();
-		
+
 		const name = formData.get('name')?.toString().trim();
 		const address = formData.get('address')?.toString().trim();
 		const sectorId = formData.get('sectorId')?.toString();
@@ -25,48 +30,43 @@ export const actions: Actions = {
 		const jenisZakat = formData.get('jenisZakat')?.toString() || 'uang';
 		const jumlahBeras = parseFloat(formData.get('jumlahBeras')?.toString() || '0');
 		const jumlahUang = parseInt(formData.get('jumlahUang')?.toString() || '0');
-		
+
 		// Validation
 		const errors: Record<string, string> = {};
-		
+
 		if (!name) {
 			errors.name = 'Nama wajib diisi';
 		}
-		
+
 		if (!sectorId) {
 			errors.sectorId = 'Sektor wajib dipilih';
 		}
-		
+
 		if (jumlahJiwa < 1) {
 			errors.jumlahJiwa = 'Jumlah jiwa minimal 1';
 		}
-		
+
 		if (Object.keys(errors).length > 0) {
 			return fail(400, { errors, values: Object.fromEntries(formData) });
 		}
-		
-		// Get organization
-		const organization = await locals.db
-			.selectFrom('organizations')
-			.select(['id'])
-			.where('slug', '=', params.orgSlug)
-			.executeTakeFirst();
-		
-		if (!organization) {
-			return fail(404, { error: 'Organisasi tidak ditemukan' });
+
+		// ✅ FIXED: Get organization from locals.user
+		const orgId = locals.user.organizationId;
+		if (!orgId) {
+			return fail(400, { error: 'Organisasi tidak ditemukan' });
 		}
-		
+
 		// Create muzaki
 		const id = crypto.randomUUID();
 		const now = Date.now();
-		
+
 		await locals.db
 			.insertInto('muzaki')
 			.values({
 				id,
-				organization_id: organization.id,
+				organization_id: orgId,
 				sector_id: sectorId!,
-				petugas_id: locals.user!.id,
+				petugas_id: locals.user.id,
 				name: name!,
 				address: address || null,
 				jumlah_jiwa: jumlahJiwa,
@@ -77,7 +77,7 @@ export const actions: Actions = {
 				updated_at: now
 			})
 			.execute();
-		
-		throw redirect(302, `/o/${params.orgSlug}/muzaki`);
+
+		throw redirect(302, `/o/${locals.user.organizationId}/muzaki`);
 	}
 };
