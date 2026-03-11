@@ -430,9 +430,9 @@
                 </div>
                 
                 <div class="flex flex-wrap justify-center gap-8 text-sm font-semibold text-slate-500">
-                    <a href="#" class="hover:text-primary-600 transition-colors">Panduan Penggunaan</a>
-                    <a href="#" class="hover:text-primary-600 transition-colors">Kebijakan Privasi</a>
-                    <a href="#" class="hover:text-primary-600 transition-colors">Syarat & Ketentuan</a>
+                    <a href="/panduan" class="hover:text-primary-600 transition-colors">Panduan Penggunaan</a>
+                    <a href="/kebijakan-privasi" class="hover:text-primary-600 transition-colors">Kebijakan Privasi</a>
+                    <a href="/syarat-ketentuan" class="hover:text-primary-600 transition-colors">Syarat & Ketentuan</a>
                 </div>
 
                 <div class="text-sm text-slate-400 font-medium">
