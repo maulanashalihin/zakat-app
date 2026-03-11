@@ -9,7 +9,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 	}
 
 	// Super admin doesn't need onboarding
-	if (locals.user.role === 'super_admin') {
+	if (locals.user.currentRole === 'super_admin') {
 		throw redirect(302, '/admin/dashboard');
 	}
 

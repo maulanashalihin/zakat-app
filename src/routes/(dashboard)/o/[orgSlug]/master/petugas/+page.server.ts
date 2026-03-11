@@ -5,7 +5,7 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 	const { organization, user } = await parent();
 
 	// Only admin and super_admin can manage petugas
-	if (user.role !== 'admin' && user.role !== 'super_admin') {
+	if (user.currentRole !== 'admin' && user.currentRole !== 'super_admin') {
 		throw error(403, 'Tidak memiliki izin mengelola petugas');
 	}
 
@@ -45,7 +45,7 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 export const actions: Actions = {
 	create: async ({ request, locals }) => {
 		// ✅ FIXED: Use locals.user directly
-		if (!locals.user || !['admin', 'super_admin'].includes(locals.user.role)) {
+		if (!locals.user || !['admin', 'super_admin'].includes(locals.user.currentRole)) {
 			throw error(403, 'Tidak memiliki izin');
 		}
 
@@ -121,7 +121,7 @@ export const actions: Actions = {
 
 	update: async ({ request, locals }) => {
 		// ✅ FIXED: Use locals.user directly
-		if (!locals.user || !['admin', 'super_admin'].includes(locals.user.role)) {
+		if (!locals.user || !['admin', 'super_admin'].includes(locals.user.currentRole)) {
 			throw error(403, 'Tidak memiliki izin');
 		}
 

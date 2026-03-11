@@ -35,7 +35,7 @@ export const load: PageServerLoad = async ({ locals, parent, url }) => {
 		.where('organization_id', '=', orgId);
 
 	// Petugas restriction - check sector assignment
-	if (user.role === 'petugas' && user.sectorId) {
+	if (user.currentRole === 'petugas' && user.sectorId) {
 		query = query.where('sector_id', '=', user.sectorId);
 	} else if (sectorId) {
 		query = query.where('sector_id', '=', sectorId);

@@ -63,16 +63,8 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		const session = await createSession(locals.db, user.id);
 		const sessionCookie = createSessionCookie(session.id);
 
-		// Get user's organization slug if they have one
-		let organizationSlug = null;
-		if (user.organization_id) {
-			const org = await locals.db
-				.selectFrom('organizations')
-				.select('slug')
-				.where('id', '=', user.organization_id)
-				.executeTakeFirst();
-			organizationSlug = org?.slug ?? null;
-		}
+		// ⭐ Get user's current organization from memberships
+		const currentOrg = user.memberships?.length > 0 ? user.memberships[0] : null;
 
 		return json(
 			{
@@ -83,9 +75,8 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 					email: user.email,
 					name: user.name,
 					provider: user.provider,
-					role: user.role,
-					organizationId: user.organization_id,
-					organizationSlug: organizationSlug
+					globalRole: user.globalRole,
+					memberships: user.memberships
 				}
 			},
 			{

@@ -8,7 +8,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 
 	// If user has organization, redirect to it
-	if (locals.user.organizationId && locals.user.role !== 'super_admin') {
+	if (locals.user.organizationId && locals.user.currentRole !== 'super_admin') {
 		const org = await locals.db
 			.selectFrom('organizations')
 			.select('slug')

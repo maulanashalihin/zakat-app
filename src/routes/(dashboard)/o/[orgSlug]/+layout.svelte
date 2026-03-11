@@ -101,7 +101,7 @@
           <span>Dashboard</span>
         </a>
 
-        {#if user.role === 'admin' || user.role === 'super_admin' || user.role === 'petugas'}
+        {#if user.currentRole === 'admin' || user.currentRole === 'super_admin' || user.currentRole === 'petugas'}
           <a
             href="/o/{organization.slug}/muzaki"
             onclick={closeMobileMenu}
@@ -112,7 +112,7 @@
           </a>
         {/if}
 
-        {#if user.role === 'admin' || user.role === 'super_admin'}
+        {#if user.currentRole === 'admin' || user.currentRole === 'super_admin'}
           <a
             href="/o/{organization.slug}/mustahik"
             onclick={closeMobileMenu}
@@ -133,7 +133,7 @@
         </a>
       </div>
 
-      {#if user.role === 'admin' || user.role === 'super_admin'}
+      {#if user.currentRole === 'admin' || user.currentRole === 'super_admin'}
         <div class="mt-8">
           <div class="px-4 mb-3">
             <span class="text-xs font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">Master Data</span>

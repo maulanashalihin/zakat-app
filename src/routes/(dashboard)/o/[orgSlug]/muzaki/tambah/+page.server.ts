@@ -5,7 +5,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 	const { organization, sectors, user } = await parent();
 	
 	// Petugas only sees their assigned sector
-	const availableSectors = user.role === 'petugas' && user.sector_id 
+	const availableSectors = user.currentRole === 'petugas' && user.sector_id 
 		? sectors.filter((s: { id: string }) => s.id === user.sector_id)
 		: sectors;
 	
@@ -16,7 +16,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 
 export const actions: Actions = {
 	default: async ({ request, locals }) => {
-		// ✅ FIXED: Use locals.user.organizationId directly
+		// ✅ FIXED: Use locals.user.currentOrganizationId directly
 		if (!locals.user) {
 			throw fail(401, { error: 'Unauthorized' });
 		}
@@ -51,7 +51,7 @@ export const actions: Actions = {
 		}
 
 		// ✅ FIXED: Get organization from locals.user
-		const orgId = locals.user.organizationId;
+		const orgId = locals.user.currentOrganizationId;
 		if (!orgId) {
 			return fail(400, { error: 'Organisasi tidak ditemukan' });
 		}
@@ -78,6 +78,6 @@ export const actions: Actions = {
 			})
 			.execute();
 
-		throw redirect(302, `/o/${locals.user.organizationId}/muzaki`);
+		throw redirect(302, `/o/${locals.user.currentOrganizationId}/muzaki`);
 	}
 };

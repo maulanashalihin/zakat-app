@@ -29,7 +29,7 @@
       <h1 class="text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">Data Mustahik</h1>
       <p class="text-slate-600 dark:text-slate-400 font-medium mt-1">Penerima zakat fitrah</p>
     </div>
-    {#if user.role === 'admin' || user.role === 'super_admin'}
+    {#if user.currentRole === 'admin' || user.currentRole === 'super_admin'}
       <a href="/o/{organization.slug}/mustahik/tambah" class="inline-flex items-center justify-center gap-2 py-4 px-6 bg-primary-600 hover:bg-primary-500 text-white rounded-xl font-bold text-lg transition-all duration-200 shadow-[0_0_40px_-10px_rgba(16,185,129,0.5)] hover:shadow-[0_0_60px_-15px_rgba(16,185,129,0.7)] hover:-translate-y-1">
         <Plus class="w-5 h-5" />
         Tambah Mustahik
@@ -110,7 +110,7 @@
                   <a href="/o/{organization.slug}/mustahik/{m.id}/edit" class="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors" title="Edit">
                     <Edit class="w-4 h-4" />
                   </a>
-                  {#if user.role === 'admin' || user.role === 'super_admin'}
+                  {#if user.currentRole === 'admin' || user.currentRole === 'super_admin'}
                     <form action="/o/{organization.slug}/mustahik/{m.id}/hapus" method="POST" class="inline" onsubmit={(e) => !confirm('Yakin ingin menghapus?') && e.preventDefault()}>
                       <button type="submit" class="p-2.5 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors" title="Hapus">
                         <Trash2 class="w-4 h-4" />

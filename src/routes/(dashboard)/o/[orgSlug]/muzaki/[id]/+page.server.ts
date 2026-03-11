@@ -16,7 +16,7 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	}
 	
 	// Check permission
-	if (user.role === 'petugas' && user.sector_id && muzaki.sector_id !== user.sector_id) {
+	if (user.currentRole === 'petugas' && user.sector_id && muzaki.sector_id !== user.sector_id) {
 		throw error(403, 'Tidak memiliki akses ke data ini');
 	}
 	

@@ -8,7 +8,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 
 export const actions: Actions = {
 	default: async ({ request, locals }) => {
-		// ✅ FIXED: Use locals.user.organizationId directly
+		// ✅ FIXED: Use locals.user.currentOrganizationId directly
 		if (!locals.user) {
 			throw fail(401, { error: 'Unauthorized' });
 		}
@@ -38,7 +38,7 @@ export const actions: Actions = {
 		}
 
 		// ✅ FIXED: Get organization from locals.user
-		const orgId = locals.user.organizationId;
+		const orgId = locals.user.currentOrganizationId;
 		if (!orgId) {
 			return fail(400, { error: 'Organisasi tidak ditemukan' });
 		}
@@ -64,6 +64,6 @@ export const actions: Actions = {
 			})
 			.execute();
 
-		throw redirect(302, `/o/${locals.user.organizationId}/mustahik`);
+		throw redirect(302, `/o/${locals.user.currentOrganizationId}/mustahik`);
 	}
 };
