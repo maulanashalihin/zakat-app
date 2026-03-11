@@ -1,115 +1,124 @@
-<script lang="ts">
-  import { Database, Shield, Zap, Globe, ArrowRight, Hexagon } from 'lucide-svelte';
+<script>
+  import { Users, Heart, TrendingUp, Shield, ArrowRight, Moon } from 'lucide-svelte';
   
   const features = [
     {
-      icon: Database,
-      title: 'Edge Database',
-      description: 'Cloudflare D1 with global replication for lightning-fast queries at the edge'
+      icon: Users,
+      title: 'Multi Organisasi',
+      description: 'Satu platform untuk banyak masjid/lembaga zakat. Setiap organisasi memiliki data terpisah.'
+    },
+    {
+      icon: Heart,
+      title: 'Kelola Muzaki & Mustahik',
+      description: 'Catat data pembayar dan penerima zakat dengan mudah. Lengkap dengan distribusi per sektor.'
+    },
+    {
+      icon: TrendingUp,
+      title: 'Dashboard & Laporan',
+      description: 'Pantau perkembangan zakat real-time. Rekap otomatis per sektor dengan grafik yang informatif.'
     },
     {
       icon: Shield,
-      title: 'Secure Auth',
-      description: 'Session-based authentication with Google OAuth and passwordless options'
-    },
-    {
-      icon: Zap,
-      title: 'Fast by Default',
-      description: 'SvelteKit 2.x with Vite for rapid development and optimal performance'
-    },
-    {
-      icon: Globe,
-      title: 'Global Scale',
-      description: 'Deploy to Cloudflare Pages with edge functions running worldwide'
+      title: 'Aman & Terpercaya',
+      description: 'Data terenkripsi dan tersimpan aman di cloud. Sistem role-based untuk kontrol akses.'
     }
   ];
 </script>
 
-<div class="min-h-screen flex flex-col">
-  <!-- Hero Section -->
-  <section class="relative flex-1 flex items-center justify-center pt-20 pb-32 px-4 overflow-hidden">
-    <!-- Background Elements -->
-    <div class="absolute inset-0 pointer-events-none">
-      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full blur-3xl" style="background-color: var(--accent-bg); opacity: 0.5;"></div>
-      <div class="absolute bottom-0 right-0 w-[600px] h-[400px] rounded-full blur-3xl" style="background-color: var(--error-bg); opacity: 0.3;"></div>
+<div class="min-h-screen flex flex-col bg-slate-50">
+  <!-- Navigation -->
+  <nav class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
+          <Moon class="w-6 h-6 text-white" />
+        </div>
+        <span class="text-xl font-bold text-slate-900">ZakatApp</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="/login" class="text-slate-600 hover:text-slate-900 font-medium">Masuk</a>
+        <a href="/register" class="btn-primary">Daftar Gratis</a>
+      </div>
     </div>
-    
-    <div class="container-tight relative z-10">
-      <div class="text-center">
-        <!-- Badge -->
-        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-8 animate-fade-in" style="background-color: var(--bg-secondary); border: 1px solid var(--border-primary);">
-          <span class="w-1.5 h-1.5 rounded-full animate-pulse" style="background-color: var(--accent-primary);"></span>
-          <span class="text-xs font-medium uppercase tracking-wider" style="color: var(--text-tertiary);">Now Available</span>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="flex-1 flex items-center justify-center py-20 px-4">
+    <div class="max-w-4xl mx-auto text-center">
+      <!-- Badge -->
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 text-green-800 text-sm font-medium mb-6">
+        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+        Gratis untuk Masjid & Lembaga Zakat
+      </div>
+      
+      <!-- Headline -->
+      <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold text-slate-900 mb-6 leading-tight">
+        Kelola Zakat Fitrah
+        <span class="text-green-600">Lebih Mudah</span>
+      </h1>
+      
+      <!-- Subheadline -->
+      <p class="text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto mb-10">
+        Platform modern untuk pengelolaan zakat fitrah dan distribusi mustahik. 
+        Multi organisasi, real-time dashboard, dan laporan lengkap.
+      </p>
+      
+      <!-- CTAs -->
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
+        <a href="/register" class="btn-primary text-lg px-8 py-4">
+          Mulai Sekarang
+          <ArrowRight class="w-5 h-5" />
+        </a>
+        <a href="/login" class="btn-secondary text-lg px-8 py-4">
+          Sudah Punya Akun?
+        </a>
+      </div>
+      
+      <!-- Stats -->
+      <div class="flex flex-wrap items-center justify-center gap-8 text-slate-600">
+        <div class="text-center">
+          <p class="text-2xl font-bold text-slate-900">100%</p>
+          <p class="text-sm">Gratis</p>
         </div>
-        
-        <!-- Headline -->
-        <h1 class="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl mb-6 animate-fade-in-up" style="animation-delay: 0.1s">
-          <span style="color: var(--text-primary);">Build at the</span>
-          <br />
-          <span class="text-gradient">speed of thought</span>
-        </h1>
-        
-        <!-- Subheadline -->
-        <p class="text-lg sm:text-xl max-w-2xl mx-auto mb-12 leading-relaxed animate-fade-in-up" style="animation-delay: 0.2s; color: var(--text-secondary);">
-          A refined starter kit for modern web applications. 
-          Built with SvelteKit, Cloudflare D1, and a touch of elegance.
-        </p>
-        
-        <!-- CTAs -->
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 animate-fade-in-up" style="animation-delay: 0.3s">
-          <a href="/register" class="btn-primary w-full sm:w-auto">
-            Get Started
-            <ArrowRight class="w-4 h-4" />
-          </a>
-          <a href="/login" class="btn-secondary w-full sm:w-auto">
-            Sign In
-          </a>
+        <span class="text-slate-300">|</span>
+        <div class="text-center">
+          <p class="text-2xl font-bold text-slate-900">Multi</p>
+          <p class="text-sm">Organisasi</p>
         </div>
-        
-        <!-- Tech Stack -->
-        <div class="flex flex-wrap items-center justify-center gap-2 text-sm animate-fade-in" style="animation-delay: 0.4s; color: var(--text-muted);">
-          <span>SvelteKit</span>
-          <span style="color: var(--border-secondary);">·</span>
-          <span>TypeScript</span>
-          <span style="color: var(--border-secondary);">·</span>
-          <span>Tailwind</span>
-          <span style="color: var(--border-secondary);">·</span>
-          <span>Drizzle</span>
-          <span style="color: var(--border-secondary);">·</span>
-          <span>D1</span>
+        <span class="text-slate-300">|</span>
+        <div class="text-center">
+          <p class="text-2xl font-bold text-slate-900">Real-time</p>
+          <p class="text-sm">Dashboard</p>
         </div>
       </div>
     </div>
   </section>
   
   <!-- Features Section -->
-  <section class="section" style="border-top: 1px solid var(--border-primary);">
-    <div class="container-tight">
+  <section class="py-20 bg-white">
+    <div class="max-w-6xl mx-auto px-4">
       <div class="text-center mb-16">
-        <h2 class="font-display text-2xl sm:text-3xl md:text-4xl mb-4" style="color: var(--text-primary);">
-          Everything you need
+        <h2 class="text-3xl font-bold text-slate-900 mb-4">
+          Fitur Lengkap untuk Pengelolaan Zakat
         </h2>
-        <p class="max-w-lg mx-auto" style="color: var(--text-secondary);">
-          Carefully selected tools and patterns for building production-ready applications
+        <p class="text-slate-600 max-w-2xl mx-auto">
+          Semua yang Anda butuhkan untuk mengelola zakat fitrah dengan lebih baik
         </p>
       </div>
       
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         {#each features as feature, i}
           {@const Icon = feature.icon}
-          <div 
-            class="group p-6 rounded-2xl transition-all duration-300"
-            style="background-color: var(--bg-card); border: 1px solid var(--border-primary); animation-delay: {i * 0.1}s;"
-          >
+          <div class="group p-6 bg-slate-50 rounded-xl hover:bg-green-50 transition-colors border border-slate-100 hover:border-green-200">
             <div class="flex items-start gap-4">
-              <div class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors duration-300" style="background-color: var(--bg-tertiary);">
-                <Icon class="w-5 h-5 transition-colors duration-300" style="color: var(--text-secondary);" />
+              <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Icon class="w-6 h-6 text-green-600" />
               </div>
               <div>
-                <h3 class="font-display font-semibold mb-1" style="color: var(--text-primary);">
+                <h3 class="font-semibold text-lg text-slate-900 mb-2">
                   {feature.title}
                 </h3>
-                <p class="text-sm leading-relaxed" style="color: var(--text-secondary);">
+                <p class="text-slate-600">
                   {feature.description}
                 </p>
               </div>
@@ -120,40 +129,26 @@
     </div>
   </section>
   
-  <!-- Quick Start Section -->
-  <section class="section" style="border-top: 1px solid var(--border-primary);">
-    <div class="container-tight">
-      <div class="card-elevated p-8 sm:p-12">
-        <div class="max-w-2xl mx-auto text-center mb-10">
-          <h2 class="font-display text-2xl sm:text-3xl md:text-4xl mb-4" style="color: var(--text-primary);">
-            Quick Start
-          </h2>
-          <p style="color: var(--text-secondary);">
-            Get up and running in minutes
-          </p>
-        </div>
-        
-        <div class="rounded-xl p-6 font-mono text-sm" style="background-color: var(--bg-primary); border: 1px solid var(--border-primary);">
-          <div class="space-y-3">
-            <p>
-              <span style="color: var(--text-muted);">$</span>
-              <span style="color: var(--text-secondary);">git clone https://github.com/yourusername/sveltekit-starter.git</span>
-            </p>
-            <p>
-              <span style="color: var(--text-muted);">$</span>
-              <span style="color: var(--text-secondary);">cd sveltekit-starter && npm install</span>
-            </p>
-            <p>
-              <span style="color: var(--text-muted);">$</span>
-              <span style="color: var(--text-secondary);">cp .env.example .env</span>
-            </p>
-            <p>
-              <span style="color: var(--text-muted);">$</span>
-              <span style="color: var(--accent-primary);">npm run dev</span>
-            </p>
-          </div>
-        </div>
-      </div>
+  <!-- CTA Section -->
+  <section class="py-20 bg-green-600">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+      <h2 class="text-3xl font-bold text-white mb-4">
+        Siap Mengelola Zakat Lebih Baik?
+      </h2>
+      <p class="text-green-100 text-lg mb-8 max-w-2xl mx-auto">
+        Daftar gratis sekarang dan mulai kelola zakat fitrah dengan sistem yang modern dan mudah digunakan.
+      </p>
+      <a href="/register" class="inline-flex items-center gap-2 bg-white text-green-600 font-semibold px-8 py-4 rounded-xl hover:bg-green-50 transition-colors">
+        Daftar Gratis Sekarang
+        <ArrowRight class="w-5 h-5" />
+      </a>
     </div>
   </section>
+  
+  <!-- Footer -->
+  <footer class="bg-slate-900 text-slate-400 py-8">
+    <div class="max-w-6xl mx-auto px-4 text-center">
+      <p>&copy; 2025 ZakatApp. Platform pengelolaan zakat fitrah modern.</p>
+    </div>
+  </footer>
 </div>

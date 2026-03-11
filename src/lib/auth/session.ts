@@ -25,6 +25,11 @@ export interface SessionUser {
 	provider: 'email' | 'google';
 	avatar: string | null;
 	createdAt: number;
+	// ⭐ NEW: Multi-organization fields
+	role: 'super_admin' | 'admin' | 'petugas' | 'viewer';
+	organizationId: string | null;
+	sectorId: string | null;
+	isActive: boolean;
 }
 
 // Session interface
@@ -119,7 +124,12 @@ export async function validateSession(
 				'users.name',
 				'users.provider',
 				'users.avatar',
-				'users.created_at'
+				'users.created_at',
+				// ⭐ NEW fields
+				'users.role',
+				'users.organization_id',
+				'users.sector_id',
+				'users.is_active'
 			])
 			.executeTakeFirst();
 
@@ -159,7 +169,12 @@ export async function validateSession(
 			name: result.name,
 			provider: result.provider as 'email' | 'google',
 			avatar: result.avatar ?? null,
-			createdAt: result.created_at ?? Date.now()
+			createdAt: result.created_at ?? Date.now(),
+			// ⭐ NEW fields
+			role: result.role as 'super_admin' | 'admin' | 'petugas' | 'viewer',
+			organizationId: result.organization_id ?? null,
+			sectorId: result.sector_id ?? null,
+			isActive: result.is_active === 1
 		};
 
 		const session: Session = {

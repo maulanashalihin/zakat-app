@@ -2,6 +2,8 @@ import { Kysely } from 'kysely';
 import { D1Dialect } from 'kysely-d1';
 import type { Database } from '$lib/db';
 import { validateSession, getSessionCookieName } from '$lib/auth/session';
+import { needsOnboarding, isSuperAdmin } from '$lib/auth/organization';
+import { getOnboardingSession } from '$lib/services/onboarding';
 import type { Handle } from '@sveltejs/kit';
 
 export const handle: Handle = async ({ event, resolve }) => {
@@ -49,6 +51,39 @@ export const handle: Handle = async ({ event, resolve }) => {
 		// Set user in locals
 		event.locals.user = user;
 		event.locals.session = session;
+
+		// ⭐ NEW: Check onboarding status for authenticated users
+		if (user) {
+			const pathname = event.url.pathname;
+			
+			// Skip onboarding check for super admin
+			if (!isSuperAdmin(user)) {
+				// Check if user needs onboarding
+				const needsOnboard = needsOnboarding(user);
+				const onboardingSession = await getOnboardingSession(event.locals.db, user.id);
+				const isInOnboarding = pathname.startsWith('/onboarding');
+				const isPublicRoute = pathname === '/login' || 
+				                      pathname === '/register' || 
+				                      pathname === '/' ||
+				                      pathname.startsWith('/auth');
+				
+				if (needsOnboard && !isInOnboarding && !isPublicRoute) {
+					// User needs onboarding and not in onboarding flow
+					return new Response(null, {
+						status: 302,
+						headers: { Location: '/onboarding/langkah-1' }
+					});
+				}
+				
+				if (!needsOnboard && isInOnboarding) {
+					// User already has org but trying to access onboarding
+					return new Response(null, {
+						status: 302,
+						headers: { Location: `/o/${user.organizationId}/dashboard` }
+					});
+				}
+			}
+		}
 	} else {
 		event.locals.user = null;
 		event.locals.session = null;

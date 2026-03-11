@@ -77,6 +77,10 @@ export const POST: RequestHandler = async ({ request, locals, platform, url }) =
         provider: 'email',
         email_verified: 0,
         is_admin: 0,
+        role: 'viewer', // ⭐ Default role
+        organization_id: null,
+        sector_id: null,
+        is_active: 1,
         created_at: Date.now(),
         updated_at: Date.now()
       })
@@ -85,6 +89,21 @@ export const POST: RequestHandler = async ({ request, locals, platform, url }) =
     // Generate verification token
     const token = generateToken();
     const tokenHash = await hashToken(token);
+
+    // ⭐ Create onboarding session
+    const onboardingId = generateId();
+    await locals.db
+      .insertInto('onboarding_sessions')
+      .values({
+        id: onboardingId,
+        user_id: userId,
+        current_step: 1,
+        completed_steps: '[]',
+        is_completed: 0,
+        started_at: Date.now(),
+        expires_at: Date.now() + (7 * 24 * 60 * 60 * 1000) // 7 days
+      })
+      .execute();
 
     // Create verification token (expires in 24 hours)
     const expiresAt = Date.now() + 24 * 60 * 60 * 1000;

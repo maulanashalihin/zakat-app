@@ -72,11 +72,29 @@ export const GET: RequestHandler = async ({ url, cookies, locals, platform }) =>
 					name: googleUser.name,
 					google_id: googleUser.sub,
 					provider: 'google',
-					avatar: null, // Use default avatar instead of Google profile picture
+					avatar: null,
 					email_verified: 1,
 					is_admin: 0,
+					role: 'viewer',
+					organization_id: null,
+					sector_id: null,
+					is_active: 1,
 					created_at: Date.now(),
 					updated_at: Date.now()
+				})
+				.execute();
+
+			// Create onboarding session for new user
+			await locals.db
+				.insertInto('onboarding_sessions')
+				.values({
+					id: generateId(),
+					user_id: userId,
+					current_step: 1,
+					completed_steps: '[]',
+					is_completed: 0,
+					started_at: Date.now(),
+					expires_at: Date.now() + (7 * 24 * 60 * 60 * 1000)
 				})
 				.execute();
 		} else {

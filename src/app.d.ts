@@ -3,6 +3,7 @@
 import type { Kysely } from 'kysely';
 import type { Database } from '$lib/db';
 import type { SessionUser, Session } from '$lib/auth/session';
+import type { Organization } from '$lib/db';
 
 declare module '$env/static/private' {
 	export const GOOGLE_CLIENT_ID: string;

@@ -24,8 +24,8 @@ pages_build_output_dir = ".svelte-kit/cloudflare"
 # 
 [[d1_databases]]
 binding = "DB"
-database_name = "zakat-app-db"
-database_id = "your-database-id-here"  # ← GANTI DENGAN ID KAMU!
+database_name = "zakat-app"
+database_id = "ddc7cf42-b311-4622-bb3d-d31b8bbbf730"  # ← GANTI DENGAN ID KAMU!
 migrations_dir = "migrations"
 
 # ---------------------------------------------------------------------------

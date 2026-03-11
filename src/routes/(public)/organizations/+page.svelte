@@ -1,0 +1,99 @@
+<script>
+  let { data } = $props();
+  
+  const organizations = data.organizations;
+  const user = data.user;
+</script>
+
+<div class="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+  <div class="w-full max-w-4xl">
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-slate-900">Pilih Organisasi</h1>
+      <p class="text-slate-600 mt-2">
+        {#if user.role === 'super_admin'}
+          Anda adalah Super Admin. Kelola semua organisasi.
+        {:else}
+          Pilih organisasi untuk mulai mengelola zakat
+        {/if}
+      </p>
+    </div>
+
+    {#if organizations.length === 0}
+      <!-- No Organizations -->
+      <div class="bg-white rounded-lg shadow-sm p-8 text-center">
+        <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+        </div>
+        <h2 class="text-xl font-semibold text-slate-900 mb-2">Belum Ada Organisasi</h2>
+        <p class="text-slate-600 mb-6">Anda belum terdaftar di organisasi mana pun.</p>
+        {#if user.role === 'super_admin'}
+          <a href="/admin/organizations" class="btn-primary">
+            Buat Organisasi Baru
+          </a>
+        {:else}
+          <p class="text-sm text-slate-500">Hubungi admin untuk diundang ke organisasi.</p>
+        {/if}
+      </div>
+    {:else}
+      <!-- Organizations Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {#each organizations as org}
+          <a 
+            href="/o/{org.slug}/dashboard"
+            class="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow border border-slate-200 hover:border-blue-300"
+          >
+            <div class="flex items-start gap-4">
+              {#if org.logo_url}
+                <img src={org.logo_url} alt={org.name} class="w-16 h-16 rounded-lg object-cover" />
+              {:else}
+                <div 
+                  class="w-16 h-16 rounded-lg flex items-center justify-center text-white text-2xl font-bold"
+                  style="background-color: {org.primary_color || '#3b82f6'}"
+                >
+                  {org.name.charAt(0).toUpperCase()}
+                </div>
+              {/if}
+              <div class="flex-1 min-w-0">
+                <h3 class="text-lg font-semibold text-slate-900 truncate">{org.name}</h3>
+                {#if org.address}
+                  <p class="text-sm text-slate-500 truncate mt-1">{org.address}</p>
+                {/if}
+                <div class="flex items-center gap-4 mt-3 text-sm text-slate-500">
+                  <span class="flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    {org.muzakiCount} muzaki
+                  </span>
+                  <span class="flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    {org.userCount} petugas
+                  </span>
+                </div>
+              </div>
+              <svg class="w-5 h-5 text-slate-400 self-center" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </a>
+        {/each}
+      </div>
+
+      <!-- Create New (Super Admin only) -->
+      {#if user.role === 'super_admin'}
+        <div class="mt-8 text-center">
+          <a href="/admin/organizations" class="inline-flex items-center text-blue-600 hover:text-blue-700">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Kelola Semua Organisasi
+          </a>
+        </div>
+      {/if}
+    {/if}
+  </div>
+</div>
