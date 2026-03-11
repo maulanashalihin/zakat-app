@@ -27,8 +27,18 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 		.limit(100) // Prevent loading too many users
 		.execute();
 
+	// ✅ FIXED: Load sectors for dropdown
+	const sectors = await locals.db
+		.selectFrom('sectors')
+		.select(['id', 'name'])
+		.where('organization_id', '=', organization.id)
+		.where('is_active', '=', 1)
+		.orderBy('name', 'asc')
+		.execute();
+
 	return {
-		users
+		users,
+		sectors
 	};
 };
 
