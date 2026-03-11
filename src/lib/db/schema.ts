@@ -20,9 +20,10 @@ export const users = sqliteTable('users', {
   avatar: text('avatar'),
   emailVerified: integer('email_verified', { mode: 'boolean' }).default(false),
   isAdmin: integer('is_admin', { mode: 'boolean' }).default(false),
-  // ⭐ NEW: Role and Organization fields
-  role: text('role', { enum: ['super_admin', 'admin', 'petugas', 'viewer'] }).notNull().default('viewer'),
-  organizationId: text('organization_id').references(() => organizations.id, { onDelete: 'cascade' }),
+  // ⭐ Role (global, not per-org)
+  globalRole: text('global_role', { enum: ['super_admin', 'user'] }).notNull().default('user'),
+  // ⭐ Primary organization (for quick access)
+  primaryOrganizationId: text('primary_organization_id').references(() => organizations.id, { onDelete: 'set null' }),
   sectorId: text('sector_id').references(() => sectors.id),
   isActive: integer('is_active', { mode: 'boolean' }).default(true),
   // Timestamps
@@ -30,9 +31,8 @@ export const users = sqliteTable('users', {
   updatedAt: integer('updated_at', { mode: 'number' }).$defaultFn(() => Date.now())
 }, (table) => [
   // Indexes for frequently queried columns
-  index('idx_users_organization_id').on(table.organizationId),
-  index('idx_users_sector_id').on(table.sectorId),
-  index('idx_users_role').on(table.role),
+  index('idx_users_primary_org').on(table.primaryOrganizationId),
+  index('idx_users_global_role').on(table.globalRole),
   index('idx_users_is_active').on(table.isActive),
   index('idx_users_email_provider').on(table.email, table.provider)
 ]);
@@ -95,6 +95,32 @@ export const organizations = sqliteTable('organizations', {
 }, (table) => [
   index('idx_organizations_slug').on(table.slug),
   index('idx_organizations_is_active').on(table.isActive)
+]);
+
+// ⭐ NEW: Organization Members - Many-to-Many relationship
+export const organizationMembers = sqliteTable('organization_members', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  organizationId: text('organization_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
+  // Role within this organization
+  role: text('role', { enum: ['admin', 'petugas', 'viewer'] }).notNull().default('viewer'),
+  sectorId: text('sector_id').references(() => sectors.id, { onDelete: 'set null' }),
+  // Status
+  isActive: integer('is_active', { mode: 'boolean' }).default(true),
+  // Timestamps
+  joinedAt: integer('joined_at', { mode: 'number' }).$defaultFn(() => Date.now()),
+  createdAt: integer('created_at', { mode: 'number' }).$defaultFn(() => Date.now()),
+  updatedAt: integer('updated_at', { mode: 'number' }).$defaultFn(() => Date.now())
+}, (table) => [
+  // Composite unique index - user can only have one membership per org
+  index('idx_org_members_user_org').on(table.userId, table.organizationId),
+  index('idx_org_members_organization').on(table.organizationId),
+  index('idx_org_members_user').on(table.userId),
+  index('idx_org_members_role').on(table.role)
 ]);
 
 // ============================================================================

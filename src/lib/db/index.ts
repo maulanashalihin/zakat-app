@@ -27,11 +27,24 @@ export interface Database {
     avatar: string | null;
     email_verified: number | null;
     is_admin: number | null;
-    // ⭐ NEW fields
-    role: 'super_admin' | 'admin' | 'petugas' | 'viewer';
-    organization_id: string | null;
+    // ⭐ NEW: Global role and primary organization
+    global_role: 'super_admin' | 'user';
+    primary_organization_id: string | null;
     sector_id: string | null;
     is_active: number | null;
+    created_at: number | null;
+    updated_at: number | null;
+  };
+
+  // ⭐ NEW: Organization Members (many-to-many)
+  organization_members: {
+    id: string;
+    user_id: string;
+    organization_id: string;
+    role: 'admin' | 'petugas' | 'viewer';
+    sector_id: string | null;
+    is_active: number | null;
+    joined_at: number | null;
     created_at: number | null;
     updated_at: number | null;
   };
@@ -290,7 +303,9 @@ export type NewOnboardingSession = Omit<OnboardingSession, 'id' | 'started_at'>;
 // ============================================================================
 
 export type AuthProvider = 'email' | 'google';
-export type UserRole = 'super_admin' | 'admin' | 'petugas' | 'viewer';
+export type GlobalUserRole = 'super_admin' | 'user';
+export type OrganizationRole = 'admin' | 'petugas' | 'viewer';
+export type UserRole = GlobalUserRole | OrganizationRole; // Legacy support
 
 export interface RegisterInput {
   email: string;
@@ -311,18 +326,6 @@ export interface GoogleUser {
 }
 
 // ============================================================================
-// API/Form Input Types
-// ============================================================================
-
-export interface ProfileUpdateInput {
-  name?: string;
-  bio?: string;
-  location?: string;
-  website?: string;
-  avatar?: string;
-}
-
-// ============================================================================
 // Organization Types
 // ============================================================================
 
@@ -333,6 +336,29 @@ export interface OrganizationCreateInput {
   phone?: string;
   email?: string;
   logoUrl?: string;
+}
+
+// ⭐ NEW: Organization Member types
+export interface OrganizationMember {
+  id: string;
+  userId: string;
+  organizationId: string;
+  role: OrganizationRole;
+  sectorId: string | null;
+  isActive: boolean;
+  joinedAt: number;
+}
+
+export interface UserMembership {
+  organization: {
+    id: string;
+    name: string;
+    slug: string;
+    logoUrl: string | null;
+  };
+  role: OrganizationRole;
+  sectorId: string | null;
+  isActive: boolean;
 }
 
 export interface ZakatSettingsInput {
