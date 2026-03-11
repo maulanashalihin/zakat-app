@@ -17,6 +17,17 @@ const COOKIE_ATTRIBUTES = {
 	maxAge: SESSION_DURATION / 1000 // in seconds
 };
 
+// ⭐ NEW: Organization membership info
+export interface OrganizationMembership {
+	organizationId: string;
+	organizationName: string;
+	organizationSlug: string;
+	organizationLogo: string | null;
+	role: 'admin' | 'petugas' | 'viewer';
+	sectorId: string | null;
+	isActive: boolean;
+}
+
 // User attributes yang akan di-return dari session
 export interface SessionUser {
 	id: string;
@@ -25,11 +36,14 @@ export interface SessionUser {
 	provider: 'email' | 'google';
 	avatar: string | null;
 	createdAt: number;
-	// ⭐ NEW: Multi-organization fields
-	role: 'super_admin' | 'admin' | 'petugas' | 'viewer';
-	organizationId: string | null;
-	sectorId: string | null;
-	isActive: boolean;
+	// ⭐ NEW: Global role and memberships
+	globalRole: 'super_admin' | 'user';
+	primaryOrganizationId: string | null;
+	memberships: OrganizationMembership[];
+	// ⭐ For backward compatibility - current active org
+	currentOrganizationId: string | null;
+	currentRole: 'admin' | 'petugas' | 'viewer' | null;
+	currentSectorId: string | null;
 }
 
 // Session interface
@@ -37,7 +51,7 @@ export interface Session {
 	id: string;
 	userId: string;
 	expiresAt: number;
-	fresh: boolean; // true if session was just created or refreshed
+	fresh: boolean;
 }
 
 // Cookie interface
@@ -54,25 +68,16 @@ export interface SessionCookie {
 	};
 }
 
-/**
- * Generate random ID (UUID v4)
- */
 export function generateId(): string {
 	return crypto.randomUUID();
 }
 
-/**
- * Generate secure random token
- */
 export function generateSessionToken(): string {
 	const array = new Uint8Array(32);
 	crypto.getRandomValues(array);
 	return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
-/**
- * Create new session for user
- */
 export async function createSession(
 	db: Kysely<Database>,
 	userId: string
@@ -97,10 +102,6 @@ export async function createSession(
 	};
 }
 
-/**
- * Validate session by ID
- * Returns user and session if valid, null otherwise
- */
 export async function validateSession(
 	db: Kysely<Database>,
 	sessionId: string
@@ -110,7 +111,6 @@ export async function validateSession(
 	}
 
 	try {
-		// Get session with user data using join
 		const result = await db
 			.selectFrom('sessions')
 			.innerJoin('users', 'sessions.user_id', 'users.id')
@@ -125,9 +125,8 @@ export async function validateSession(
 				'users.provider',
 				'users.avatar',
 				'users.created_at',
-				// ⭐ NEW fields
-				'users.role',
-				'users.organization_id',
+				'users.global_role',
+				'users.primary_organization_id',
 				'users.sector_id',
 				'users.is_active'
 			])
@@ -137,9 +136,7 @@ export async function validateSession(
 			return { user: null, session: null };
 		}
 
-		// Check if session expired
 		if (Date.now() > result.expires_at) {
-			// Delete expired session
 			await db
 				.deleteFrom('sessions')
 				.where('id', '=', sessionId)
@@ -147,12 +144,10 @@ export async function validateSession(
 			return { user: null, session: null };
 		}
 
-		// Check if session needs refresh (expires in less than 15 days)
 		const fifteenDays = 15 * 24 * 60 * 60 * 1000;
 		let fresh = false;
 
 		if (result.expires_at - Date.now() < fifteenDays) {
-			// Extend session
 			const newExpiresAt = Date.now() + SESSION_DURATION;
 			await db
 				.updateTable('sessions')
@@ -163,6 +158,39 @@ export async function validateSession(
 			fresh = true;
 		}
 
+		// ⭐ NEW: Load user's organization memberships
+		const memberships = await db
+			.selectFrom('organization_members')
+			.innerJoin('organizations', 'organization_members.organization_id', 'organizations.id')
+			.select([
+				'organization_members.organization_id',
+				'organization_members.role',
+				'organization_members.sector_id',
+				'organization_members.is_active',
+				'organizations.id as org_id',
+				'organizations.name as org_name',
+				'organizations.slug as org_slug',
+				'organizations.logo_url as org_logo'
+			])
+			.where('organization_members.user_id', '=', result.user_id)
+			.where('organization_members.is_active', '=', 1)
+			.execute();
+
+		const membershipList: OrganizationMembership[] = memberships.map(m => ({
+			organizationId: m.organization_id,
+			organizationName: m.org_name,
+			organizationSlug: m.org_slug,
+			organizationLogo: m.org_logo,
+			role: m.role as 'admin' | 'petugas' | 'viewer',
+			sectorId: m.sector_id,
+			isActive: m.is_active === 1
+		}));
+
+		// Set current organization (primary or first membership)
+		const currentMembership = membershipList.find(m => m.organizationId === result.primary_organization_id) 
+			|| membershipList[0] 
+			|| null;
+
 		const user: SessionUser = {
 			id: result.user_id,
 			email: result.email,
@@ -170,11 +198,12 @@ export async function validateSession(
 			provider: result.provider as 'email' | 'google',
 			avatar: result.avatar ?? null,
 			createdAt: result.created_at ?? Date.now(),
-			// ⭐ NEW fields
-			role: result.role as 'super_admin' | 'admin' | 'petugas' | 'viewer',
-			organizationId: result.organization_id ?? null,
-			sectorId: result.sector_id ?? null,
-			isActive: result.is_active === 1
+			globalRole: result.global_role as 'super_admin' | 'user',
+			primaryOrganizationId: result.primary_organization_id,
+			memberships: membershipList,
+			currentOrganizationId: currentMembership?.organizationId || null,
+			currentRole: currentMembership?.role || null,
+			currentSectorId: currentMembership?.sectorId || null
 		};
 
 		const session: Session = {
@@ -191,9 +220,6 @@ export async function validateSession(
 	}
 }
 
-/**
- * Invalidate (delete) session
- */
 export async function invalidateSession(
 	db: Kysely<Database>,
 	sessionId: string
@@ -210,9 +236,6 @@ export async function invalidateSession(
 	}
 }
 
-/**
- * Invalidate all sessions for a user
- */
 export async function invalidateUserSessions(
 	db: Kysely<Database>,
 	userId: string
@@ -227,9 +250,6 @@ export async function invalidateUserSessions(
 	}
 }
 
-/**
- * Create session cookie
- */
 export function createSessionCookie(sessionId: string): SessionCookie {
 	return {
 		name: SESSION_COOKIE_NAME,
@@ -241,9 +261,6 @@ export function createSessionCookie(sessionId: string): SessionCookie {
 	};
 }
 
-/**
- * Create blank session cookie (for logout)
- */
 export function createBlankSessionCookie(): SessionCookie {
 	return {
 		name: SESSION_COOKIE_NAME,
@@ -256,16 +273,10 @@ export function createBlankSessionCookie(): SessionCookie {
 	};
 }
 
-/**
- * Get session cookie name
- */
 export function getSessionCookieName(): string {
 	return SESSION_COOKIE_NAME;
 }
 
-/**
- * Serialize cookie for Set-Cookie header
- */
 export function serializeCookie(cookie: SessionCookie): string {
 	const { name, value, attributes } = cookie;
 

@@ -205,7 +205,7 @@ export class OnboardingService {
     for (const sector of tempData.step3.sectors) {
       const sectorId = crypto.randomUUID();
       sectorIds[sector.name] = sectorId;
-      
+
       await this.db
         .insertInto('sectors')
         .values({
@@ -220,33 +220,78 @@ export class OnboardingService {
         .execute();
     }
 
-    // 5. Update user to admin of this organization
+    // 5. ⭐ NEW: Add user as admin member of this organization
+    const membershipId = crypto.randomUUID();
+    await this.db
+      .insertInto('organization_members')
+      .values({
+        id: membershipId,
+        user_id: userId,
+        organization_id: orgId,
+        role: 'admin',
+        sector_id: null,
+        is_active: 1,
+        joined_at: now,
+        created_at: now,
+        updated_at: now
+      })
+      .execute();
+
+    // 6. Update user's primary organization
     await this.db
       .updateTable('users')
       .set({
-        organization_id: orgId,
-        role: 'admin',
+        primary_organization_id: orgId,
         updated_at: now
       })
       .where('id', '=', userId)
       .execute();
 
-    // 6. Invite team members (if any)
+    // 7. Invite team members (if any)
     if (tempData.step4?.members && tempData.step4.members.length > 0) {
       for (const member of tempData.step4.members) {
-        const memberId = crypto.randomUUID();
+        // Check if user exists
+        let existingMember = await this.db
+          .selectFrom('users')
+          .select('id')
+          .where('email', '=', member.email)
+          .executeTakeFirst();
+
+        let memberId = existingMember?.id;
+
+        if (!existingMember) {
+          // Create new user
+          memberId = crypto.randomUUID();
+          await this.db
+            .insertInto('users')
+            .values({
+              id: memberId,
+              email: member.email,
+              name: member.name,
+              password_hash: null,
+              provider: 'email',
+              global_role: 'user',
+              primary_organization_id: null,
+              sector_id: null,
+              is_active: 1,
+              created_at: now,
+              updated_at: now
+            })
+            .execute();
+        }
+
+        // Add as member
+        const memberMembershipId = crypto.randomUUID();
         await this.db
-          .insertInto('users')
+          .insertInto('organization_members')
           .values({
-            id: memberId,
-            email: member.email,
-            name: member.name,
-            password_hash: null, // Will set on first login
-            provider: 'email',
-            role: member.role,
+            id: memberMembershipId,
+            user_id: memberId!,
             organization_id: orgId,
+            role: member.role,
             sector_id: member.sectorId || null,
             is_active: 1,
+            joined_at: now,
             created_at: now,
             updated_at: now
           })
@@ -256,7 +301,7 @@ export class OnboardingService {
       }
     }
 
-    // 7. Mark onboarding as completed
+    // 8. Mark onboarding as completed
     await this.db
       .updateTable('onboarding_sessions')
       .set({

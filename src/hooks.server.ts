@@ -2,8 +2,6 @@ import { Kysely } from 'kysely';
 import { D1Dialect } from 'kysely-d1';
 import type { Database } from '$lib/db';
 import { validateSession, getSessionCookieName } from '$lib/auth/session';
-import { needsOnboarding, isSuperAdmin } from '$lib/auth/organization';
-import { getOnboardingSession } from '$lib/services/onboarding';
 import type { Handle } from '@sveltejs/kit';
 
 export const handle: Handle = async ({ event, resolve }) => {
@@ -52,43 +50,55 @@ export const handle: Handle = async ({ event, resolve }) => {
 		event.locals.user = user;
 		event.locals.session = session;
 
-		// ⭐ NEW: Check onboarding status for authenticated users
+		// ⭐ NEW: Check organization access and onboarding status
 		if (user) {
 			const pathname = event.url.pathname;
-			
-			// Skip onboarding check for super admin
-			if (!isSuperAdmin(user)) {
-				// Check if user needs onboarding
-				const needsOnboard = needsOnboarding(user);
-				const onboardingSession = await getOnboardingSession(event.locals.db, user.id);
-				const isInOnboarding = pathname.startsWith('/onboarding');
-				const isPublicRoute = pathname === '/login' || 
-				                      pathname === '/register' || 
+
+			// Super admin can access everything
+			if (user.globalRole === 'super_admin') {
+				// Redirect super admin to admin dashboard if not in org context
+				if (pathname === '/dashboard' || pathname === '/') {
+					return new Response(null, {
+						status: 302,
+						headers: { Location: '/admin/dashboard' }
+					});
+				}
+			} else {
+				// Regular user must have organization membership
+				const isPublicRoute = pathname === '/login' ||
+				                      pathname === '/register' ||
 				                      pathname === '/' ||
-				                      pathname.startsWith('/auth');
-				
-				if (needsOnboard && !isInOnboarding && !isPublicRoute) {
-					// User needs onboarding and not in onboarding flow
+				                      pathname.startsWith('/auth') ||
+				                      pathname.startsWith('/onboarding');
+
+				if (!isPublicRoute && user.memberships.length === 0) {
+					// User has no organization membership - redirect to onboarding
 					return new Response(null, {
 						status: 302,
 						headers: { Location: '/onboarding/langkah-1' }
 					});
 				}
-				
-				if (!needsOnboard && isInOnboarding) {
-					// User already has org but trying to access onboarding
-					// Get organization slug
-					const org = await event.locals.db
-						.selectFrom('organizations')
-						.select('slug')
-						.where('id', '=', user.organizationId!)
-						.executeTakeFirst();
 
-					const redirectPath = org?.slug ? `/o/${org.slug}/dashboard` : '/dashboard';
-					return new Response(null, {
-						status: 302,
-						headers: { Location: redirectPath }
-					});
+				// Check if trying to access organization without membership
+				if (pathname.startsWith('/o/')) {
+					const orgSlug = pathname.split('/')[2];
+					const hasAccess = user.memberships.some(m => m.organizationSlug === orgSlug && m.isActive);
+					
+					if (!hasAccess) {
+						// Redirect to first available organization or onboarding
+						if (user.memberships.length > 0) {
+							const firstOrg = user.memberships[0];
+							return new Response(null, {
+								status: 302,
+								headers: { Location: `/o/${firstOrg.organizationSlug}/dashboard` }
+							});
+						} else {
+							return new Response(null, {
+								status: 302,
+								headers: { Location: '/onboarding/langkah-1' }
+							});
+						}
+					}
 				}
 			}
 		}

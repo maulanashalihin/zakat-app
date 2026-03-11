@@ -14,14 +14,12 @@ const registerSchema = z.object({
     .regex(/[0-9]/, 'Password must contain at least one number')
 });
 
-// Generate a secure random token
 function generateToken(): string {
   const array = new Uint8Array(32);
   crypto.getRandomValues(array);
   return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
-// Hash token using SHA-256
 async function hashToken(token: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(token);
@@ -32,19 +30,15 @@ async function hashToken(token: string): Promise<string> {
 
 export const POST: RequestHandler = async ({ request, locals, platform, url }) => {
   try {
-    // Check if D1 binding exists
     if (!platform?.env.DB) {
       throw error(500, { message: 'Database not available' });
     }
 
     const body = await request.json();
-    
-    // Validate input
     const result = registerSchema.safeParse(body);
+    
     if (!result.success) {
-      throw error(400, { 
-        message: 'Validation failed'
-      });
+      throw error(400, { message: 'Validation failed' });
     }
 
     const { email, name, password } = result.data;
@@ -52,21 +46,18 @@ export const POST: RequestHandler = async ({ request, locals, platform, url }) =
     // Check if user already exists
     const existingUser = await locals.db
       .selectFrom('users')
-      .where('email', '=', email)
       .select('id')
+      .where('email', '=', email)
       .executeTakeFirst();
 
     if (existingUser) {
       throw error(409, { message: 'Email already registered' });
     }
 
-    // Hash password
     const passwordHash = await hashPassword(password);
-
-    // Generate user ID
     const userId = generateId();
 
-    // Create user (email_verified = 0 by default)
+    // Create user with global_role = 'user'
     await locals.db
       .insertInto('users')
       .values({
@@ -76,9 +67,8 @@ export const POST: RequestHandler = async ({ request, locals, platform, url }) =
         password_hash: passwordHash,
         provider: 'email',
         email_verified: 0,
-        is_admin: 0,
-        role: 'viewer', // ⭐ Default role
-        organization_id: null,
+        global_role: 'user',
+        primary_organization_id: null,
         sector_id: null,
         is_active: 1,
         created_at: Date.now(),
@@ -90,7 +80,7 @@ export const POST: RequestHandler = async ({ request, locals, platform, url }) =
     const token = generateToken();
     const tokenHash = await hashToken(token);
 
-    // ⭐ Create onboarding session
+    // Create onboarding session
     const onboardingId = generateId();
     await locals.db
       .insertInto('onboarding_sessions')
@@ -101,13 +91,12 @@ export const POST: RequestHandler = async ({ request, locals, platform, url }) =
         completed_steps: '[]',
         is_completed: 0,
         started_at: Date.now(),
-        expires_at: Date.now() + (7 * 24 * 60 * 60 * 1000) // 7 days
+        expires_at: Date.now() + (7 * 24 * 60 * 60 * 1000)
       })
       .execute();
 
-    // Create verification token (expires in 24 hours)
+    // Create verification token
     const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
-
     await locals.db
       .insertInto('email_verification_tokens')
       .values({
@@ -120,16 +109,10 @@ export const POST: RequestHandler = async ({ request, locals, platform, url }) =
       })
       .execute();
 
-    // Generate verification URL
-    const verificationUrl = `${url.origin}/auth/verify-email?token=${token}&email=${encodeURIComponent(email)}`;
-
     // Send verification email
-    const emailTemplate = generateVerificationEmail({
-      name,
-      verificationUrl,
-      expiresIn: '24 hours'
-    });
-
+    const verificationUrl = `${url.origin}/auth/verify-email?token=${token}&email=${encodeURIComponent(email)}`;
+    const emailTemplate = generateVerificationEmail({ name, verificationUrl, expiresIn: '24 hours' });
+    
     const emailResult = await sendEmail({
       to: email,
       subject: 'Verify your email address',
@@ -139,34 +122,23 @@ export const POST: RequestHandler = async ({ request, locals, platform, url }) =
 
     if (!emailResult.success) {
       console.error('Failed to send verification email:', emailResult.error);
-      // Don't fail registration if email fails, just log it
-      // In production, you might want to handle this differently
     }
 
-    // Log verification link for development
-    console.log('\n📧 Verification Email:');
-    console.log('To:', email);
-    console.log('Link:', verificationUrl);
-    console.log('');
+    console.log('\n📧 Verification Email:', verificationUrl, '\n');
 
     return json(
-      { 
-        success: true, 
+      {
+        success: true,
         message: 'Registration successful! Please check your email to verify your account.',
         user: { id: userId, email, name },
-        // For development only
-        ...(dev && {
-          devLink: verificationUrl
-        })
+        ...(dev && { devLink: verificationUrl })
       },
       { status: 201 }
     );
 
   } catch (err: any) {
     console.error('Registration error:', err);
-    
     if (err.status) throw err;
-    
     throw error(500, { message: 'Registration failed' });
   }
 };
