@@ -1,9 +1,11 @@
 <script>
+  import { MapPin, TrendingUp, Users, HandHeart, Package, DollarSign, ArrowRight } from 'lucide-svelte';
+
   let { data } = $props();
-  
+
   const organization = data.organization;
   const sectors = data.sectors;
-  
+
   function formatNumber(num) {
     return new Intl.NumberFormat('id-ID').format(num || 0);
   }
@@ -13,71 +15,108 @@
   <title>Rekap per Sektor - {organization.name} | ZakatApp</title>
 </svelte:head>
 
-<div class="p-4 lg:p-6" style="background-color: var(--bg-primary); min-height: 100%;">
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4 lg:p-8">
   <!-- Header -->
-  <div class="mb-4 lg:mb-6">
-    <h1 class="text-xl lg:text-2xl font-bold" style="color: var(--text-primary);">Rekap per Sektor</h1>
-    <p class="text-sm lg:text-base" style="color: var(--text-secondary);">Ringkasan pengumpulan zakat per sektor</p>
+  <div class="mb-8">
+    <h1 class="text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">Rekap per Sektor</h1>
+    <p class="text-slate-600 dark:text-slate-400 font-medium mt-1">Ringkasan pengumpulan zakat per sektor</p>
   </div>
 
   <!-- Sektor Cards -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+  <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
     {#each sectors as sector}
-      <div class="rounded-lg shadow-sm p-4 lg:p-6" style="background-color: var(--bg-secondary); border: 1px solid var(--border-primary); border-left: 4px solid {sector.color || '#3b82f6'}">
-        <div class="flex items-center gap-3 mb-3 lg:mb-4">
-          <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center shrink-0" style="background-color: {sector.color || '#3b82f6'}20;">
-            <svg class="w-4 h-4 lg:w-5 lg:h-5" style="color: {sector.color || '#3b82f6'};" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          </div>
-          <div class="min-w-0">
-            <h3 class="font-semibold text-sm lg:text-base truncate" style="color: var(--text-primary);">{sector.name}</h3>
-            <span class="inline-flex items-center px-1.5 lg:px-2 py-0.5 rounded text-xs font-medium" style="background-color: {sector.is_active ? 'rgba(16, 185, 129, 0.1)' : 'var(--bg-tertiary)'}; color: {sector.is_active ? '#10b981' : 'var(--text-tertiary)'};">
-              {sector.is_active ? 'Aktif' : 'Nonaktif'}
-            </span>
-          </div>
-        </div>
-        
-        <div class="space-y-2 lg:space-y-3 text-sm">
-          <div class="flex justify-between items-center">
-            <span style="color: var(--text-secondary);">Muzaki</span>
-            <span class="font-medium" style="color: var(--text-primary);">{formatNumber(sector.muzakiCount)}</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span style="color: var(--text-secondary);">Total Jiwa</span>
-            <span class="font-medium" style="color: var(--text-primary);">{formatNumber(sector.totalJiwa)}</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span style="color: var(--text-secondary);">Total Beras</span>
-            <span class="font-medium" style="color: #f59e0b;">{formatNumber(sector.totalBeras)} kg</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span style="color: var(--text-secondary);">Total Uang</span>
-            <span class="font-medium" style="color: #10b981;">Rp {formatNumber(sector.totalUang)}</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span style="color: var(--text-secondary);">Mustahik</span>
-            <span class="font-medium" style="color: var(--text-primary);">{formatNumber(sector.mustahikCount)}</span>
+      <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/40 dark:border-slate-700/40 shadow-[0_20px_50px_rgb(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgb(0,0,0,0.4)] rounded-[2rem] overflow-hidden group hover:-translate-y-1 transition-all duration-300">
+        <!-- Card Header with Color -->
+        <div class="p-6 border-b border-slate-200 dark:border-slate-700" style="border-left: 6px solid {sector.color || '#3b82f6'}">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg" style="background-color: {sector.color || '#3b82f6'}20">
+                <MapPin class="w-7 h-7" style="color: {sector.color || '#3b82f6'}" />
+              </div>
+              <div>
+                <h3 class="text-xl font-extrabold text-slate-900 dark:text-white">{sector.name}</h3>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold mt-1 {sector.is_active ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}">
+                  {sector.is_active ? '✓ Aktif' : '○ Nonaktif'}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
-        
-        <div class="mt-3 lg:mt-4 pt-3 lg:pt-4" style="border-top: 1px solid var(--border-primary);">
-          <a href="/o/{organization.slug}/muzaki?sector={sector.id}" class="text-sm font-medium flex items-center gap-1" style="color: #3b82f6;">
-            Lihat Detail
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
+
+        <!-- Stats -->
+        <div class="p-6 space-y-4">
+          <div class="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
+                <Users class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <span class="text-sm font-bold text-slate-600 dark:text-slate-400">Muzaki</span>
+            </div>
+            <span class="text-2xl font-extrabold text-slate-900 dark:text-white">{formatNumber(sector.muzakiCount)}</span>
+          </div>
+
+          <div class="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center">
+                <TrendingUp class="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              </div>
+              <span class="text-sm font-bold text-slate-600 dark:text-slate-400">Total Jiwa</span>
+            </div>
+            <span class="text-2xl font-extrabold text-slate-900 dark:text-white">{formatNumber(sector.totalJiwa)}</span>
+          </div>
+
+          <div class="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/20 flex items-center justify-center">
+                <Package class="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <span class="text-sm font-bold text-slate-600 dark:text-slate-400">Total Beras</span>
+            </div>
+            <span class="text-xl font-extrabold text-amber-600 dark:text-amber-400">{formatNumber(sector.totalBeras)} <span class="text-sm font-bold">kg</span></span>
+          </div>
+
+          <div class="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/20 flex items-center justify-center">
+                <DollarSign class="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <span class="text-sm font-bold text-slate-600 dark:text-slate-400">Total Uang</span>
+            </div>
+            <span class="text-xl font-extrabold text-emerald-600 dark:text-emerald-400">Rp {formatNumber(sector.totalUang)}</span>
+          </div>
+
+          <div class="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
+                <HandHeart class="w-5 h-5 text-green-600 dark:text-green-400" />
+              </div>
+              <span class="text-sm font-bold text-slate-600 dark:text-slate-400">Mustahik</span>
+            </div>
+            <span class="text-2xl font-extrabold text-slate-900 dark:text-white">{formatNumber(sector.mustahikCount)}</span>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="p-4 pt-0">
+          <a href="/o/{organization.slug}/muzaki?sector={sector.id}" class="flex items-center justify-center gap-2 py-3 px-4 bg-slate-50 dark:bg-slate-800 hover:bg-primary-50 dark:hover:bg-primary-900/20 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 rounded-xl font-bold transition-all group">
+            Lihat Detail Sektor
+            <ArrowRight class="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </a>
         </div>
       </div>
     {:else}
-      <div class="col-span-full rounded-lg shadow-sm p-8 lg:p-12 text-center" style="background-color: var(--bg-secondary); border: 1px solid var(--border-primary);">
-        <svg class="w-12 h-12 lg:w-16 lg:h-16 mx-auto mb-3 lg:mb-4" style="color: var(--text-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0121 18.382V7.618a1 1 0 01-.806-.984A1 1 0 0120 6.382V7m0 13V7" />
-        </svg>
-        <h3 class="text-base lg:text-lg font-medium mb-1 lg:mb-2" style="color: var(--text-primary);">Belum ada sektor</h3>
-        <p class="text-sm" style="color: var(--text-secondary);">Tambah sektor melalui menu Master Data {'>'} Sektor</p>
+      <div class="col-span-full">
+        <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/40 dark:border-slate-700/40 shadow-[0_20px_50px_rgb(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgb(0,0,0,0.4)] rounded-[2rem] p-12 text-center">
+          <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+            <MapPin class="w-12 h-12 text-slate-400" />
+          </div>
+          <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mb-2">Belum ada sektor</h3>
+          <p class="text-slate-500 dark:text-slate-400 font-medium mb-6">Tambah sektor melalui menu Master Data → Sektor</p>
+          <a href="/o/{organization.slug}/master/sektor" class="inline-flex items-center justify-center gap-2 py-3 px-6 bg-primary-600 hover:bg-primary-500 text-white rounded-xl font-bold transition-all">
+            <Plus class="w-5 h-5" />
+            Tambah Sektor Pertama
+          </a>
+        </div>
       </div>
     {/each}
   </div>
