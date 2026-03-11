@@ -1,7 +1,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
-  import { Chrome, Mail, Lock, Eye, EyeOff, Loader2, ArrowRight, Building2 } from 'lucide-svelte';
+  import { Chrome, Mail, Lock, Eye, EyeOff, Loader2, ArrowRight, Building2, CheckCircle } from 'lucide-svelte';
   import { theme } from '$lib/stores/theme.svelte';
 
   let email = $state('');
@@ -9,6 +9,10 @@
   let showPassword = $state(false);
   let loading = $state(false);
   let errorMsg = $state('');
+  let showResendVerification = $state(false);
+  let resendLoading = $state(false);
+  let resendMessage = $state('');
+  let resendSuccess = $state(false);
 
   onMount(() => {
     theme.init();
@@ -27,11 +31,16 @@
       });
 
       const data = await res.json() as {
+        success?: boolean;
         message?: string;
         user?: {
-          role: string;
-          organizationId: string | null;
-          organizationSlug: string | null;
+          id: string;
+          email: string;
+          name: string;
+          provider: string;
+          role?: string;
+          organizationId?: string | null;
+          organizationSlug?: string | null;
         }
       };
 
@@ -39,27 +48,60 @@
         throw new Error(data.message || 'Login failed');
       }
 
+      // Login successful - redirect based on user role
       const user = data.user;
-      if (!user) {
-        throw new Error('User data not received');
-      }
-
-      if (user.role === 'super_admin') {
-        goto('/admin/dashboard');
+      
+      if (user?.role === 'super_admin') {
+        window.location.href = '/admin/dashboard';
         return;
       }
 
-      if (user.organizationId && user.organizationSlug) {
-        goto(`/o/${user.organizationSlug}/dashboard`);
+      if (user?.organizationId && user?.organizationSlug) {
+        window.location.href = `/o/${user.organizationSlug}/dashboard`;
         return;
       }
 
-      goto('/onboarding/langkah-1');
+      // User needs onboarding
+      window.location.href = '/onboarding/langkah-1';
 
     } catch (err: any) {
       errorMsg = err.message;
+      // Show resend verification option if email not verified
+      if (errorMsg.includes('verify')) {
+        showResendVerification = true;
+      }
     } finally {
       loading = false;
+    }
+  }
+
+  async function handleResendVerification() {
+    if (!email) return;
+    
+    resendLoading = true;
+    resendMessage = '';
+    resendSuccess = false;
+
+    try {
+      const res = await fetch('/auth/resend-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+
+      const data = await res.json() as { message?: string; success?: boolean };
+
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to resend verification email');
+      }
+
+      resendSuccess = true;
+      resendMessage = 'Email verifikasi berhasil dikirim! Silakan cek inbox Anda.';
+    } catch (err: any) {
+      resendMessage = err.message || 'Gagal mengirim email verifikasi.';
+      resendSuccess = false;
+    } finally {
+      resendLoading = false;
     }
   }
 
@@ -72,9 +114,7 @@
   <title>Login - ZakatApp</title>
 </svelte:head>
 
-<svelte:window css="selection:bg-primary-500 selection:text-white" />
-
-<div class="min-h-screen flex items-center justify-center py-12 px-4 relative overflow-hidden font-sans selection:bg-primary-500 selection:text-white">
+<div class="min-h-screen flex items-center justify-center py-12 px-4 relative overflow-hidden font-sans selection:bg-primary-500 selection:text-white bg-slate-50 dark:bg-slate-950">
   <!-- Background Effects -->
   <div class="absolute inset-0 pointer-events-none -z-10">
     <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary-400/20 blur-[120px] rounded-full"></div>
@@ -89,12 +129,12 @@
         <div class="w-12 h-12 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white shadow-lg shadow-primary-500/40 transition-transform duration-300 group-hover:scale-105">
           <Building2 class="w-6 h-6" />
         </div>
-        <span class="font-extrabold text-2xl tracking-tight">Zakat<span class="text-primary-600">App</span></span>
+        <span class="font-extrabold text-2xl tracking-tight text-slate-900 dark:text-white">Zakat<span class="text-primary-600 dark:text-primary-400">App</span></span>
       </a>
     </div>
 
     <!-- Card -->
-    <div class="bg-white/80 backdrop-blur-xl border border-white/40 shadow-[0_20px_50px_rgb(0,0,0,0.1)] rounded-[2rem] p-8 relative transform -rotate-1 hover:rotate-0 transition-transform duration-500">
+    <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/40 dark:border-slate-700/40 shadow-[0_20px_50px_rgb(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgb(0,0,0,0.4)] rounded-[2rem] p-8 relative transform -rotate-1 hover:rotate-0 transition-transform duration-500">
       <div class="flex gap-2 mb-6 px-2">
         <div class="w-3 h-3 rounded-full bg-red-400"></div>
         <div class="w-3 h-3 rounded-full bg-amber-400"></div>
@@ -102,41 +142,65 @@
       </div>
 
       <div class="text-center mb-8">
-        <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">Selamat Datang</h1>
-        <p class="text-slate-600 font-medium">Masuk ke akun Anda</p>
+        <h1 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">Selamat Datang</h1>
+        <p class="text-slate-600 dark:text-slate-400 font-medium">Masuk ke akun Anda</p>
       </div>
 
       {#if errorMsg}
-        <div class="mb-6 p-4 rounded-xl text-sm bg-red-50 text-red-600 border border-red-100">
+        <div class="mb-6 p-4 rounded-xl text-sm bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800">
           {errorMsg}
         </div>
+        {#if showResendVerification}
+          <div class="mb-6 p-4 rounded-xl bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800">
+            <p class="text-sm text-primary-700 dark:text-primary-300 font-medium mb-3">
+              Belum menerima email verifikasi?
+            </p>
+            {#if resendMessage}
+              <div class="mb-3 p-3 rounded-lg text-sm {resendSuccess ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'}">
+                {resendMessage}
+              </div>
+            {/if}
+            <button
+              onclick={handleResendVerification}
+              disabled={resendLoading || !email}
+              class="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-primary-600 hover:bg-primary-500 text-white rounded-lg font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {#if resendLoading}
+                <Loader2 class="w-4 h-4 animate-spin" />
+                Mengirim...
+              {:else}
+                <Mail class="w-4 h-4" />
+                Kirim Ulang Email Verifikasi
+              {/if}
+            </button>
+          </div>
+        {/if}
       {/if}
 
       <!-- Google Button -->
       <button
         onclick={loginWithGoogle}
         disabled={loading}
-        class="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-xl font-bold transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
-        style="background-color: #f8fafc; color: #1e293b; border: 1px solid #e2e8f0;"
+        class="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-xl font-bold transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700"
       >
         <Chrome class="w-5 h-5" />
         Masuk dengan Google
       </button>
 
       <!-- Divider -->
-      <div class="relative mb-6">
+      <div class="relative my-8">
         <div class="absolute inset-0 flex items-center">
-          <div class="w-full border-t border-slate-200"></div>
+          <div class="w-full border-t border-slate-200 dark:border-slate-700"></div>
         </div>
         <div class="relative flex justify-center text-xs">
-          <span class="px-4 bg-white text-slate-400 font-medium">atau masuk dengan email</span>
+          <span class="px-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">atau</span>
         </div>
       </div>
 
       <!-- Form -->
       <form onsubmit={handleSubmit} class="space-y-5">
         <div>
-          <label for="email" class="block text-sm font-bold text-slate-700 mb-2">
+          <label for="email" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
             Alamat Email
           </label>
           <div class="relative">
@@ -146,7 +210,7 @@
               type="email"
               bind:value={email}
               required
-              class="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+              class="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
               placeholder="you@example.com"
             />
           </div>
@@ -154,10 +218,10 @@
 
         <div>
           <div class="flex items-center justify-between mb-2">
-            <label for="password" class="text-sm font-bold text-slate-700">
+            <label for="password" class="text-sm font-bold text-slate-700 dark:text-slate-300">
               Password
             </label>
-            <a href="/forgot-password" class="text-sm font-medium text-primary-600 hover:text-primary-500 transition-colors">
+            <a href="/forgot-password" class="text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-500 transition-colors">
               Lupa?
             </a>
           </div>
@@ -169,7 +233,7 @@
                 type="text"
                 bind:value={password}
                 required
-                class="w-full pl-12 pr-12 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+                class="w-full pl-12 pr-12 py-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
                 placeholder="••••••••"
               />
             {:else}
@@ -178,14 +242,14 @@
                 type="password"
                 bind:value={password}
                 required
-                class="w-full pl-12 pr-12 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+                class="w-full pl-12 pr-12 py-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
                 placeholder="••••••••"
               />
             {/if}
             <button
               type="button"
               onclick={() => showPassword = !showPassword}
-              class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+              class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
             >
               {#if showPassword}
                 <EyeOff class="w-5 h-5" />
@@ -212,9 +276,9 @@
       </form>
     </div>
 
-    <p class="text-center mt-8 text-slate-600 font-medium">
+    <p class="text-center mt-8 text-slate-600 dark:text-slate-400 font-medium">
       Belum punya akun?
-      <a href="/register" class="text-primary-600 hover:text-primary-500 font-bold transition-colors">
+      <a href="/register" class="text-primary-600 dark:text-primary-400 hover:text-primary-500 font-bold transition-colors">
         Daftar Gratis
       </a>
     </p>

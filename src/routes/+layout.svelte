@@ -3,20 +3,20 @@
   import { page } from '$app/state';
   import { Hexagon, Sun, Moon } from 'lucide-svelte';
   import { theme } from '$lib/stores/theme.svelte';
-  
+
   let { children } = $props();
-  
+
   let isDashboardRoute = $derived(page.url.pathname.startsWith('/dashboard') || page.url.pathname.startsWith('/admin') || page.url.pathname.startsWith('/o/'));
   let isAuthPage = $derived(['/login', '/register', '/forgot-password', '/reset-password'].some(path => page.url.pathname.startsWith(path)));
   let isOnboarding = $derived(page.url.pathname.startsWith('/onboarding'));
   let isHomePage = $derived(page.url.pathname === '/');
-  
+
   function toggleTheme() {
     theme.toggle();
   }
 </script>
 
-{#if isAuthPage}
+{#if isAuthPage || isOnboarding}
   {@render children()}
 {:else if isDashboardRoute}
   {@render children()}

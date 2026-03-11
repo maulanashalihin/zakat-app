@@ -25,10 +25,10 @@ export const actions: Actions = {
 		if (skip) {
 			// Skip adding members
 			await onboardingService.saveStep4(locals.user!.id, { skip: true, members: [] });
-			
+
 			// Complete onboarding
 			const result = await onboardingService.completeOnboarding(locals.user!.id);
-			throw redirect(302, `/o/${result.slug}/dashboard`);
+			throw redirect(302, '/onboarding/selesai');
 		}
 		
 		// Parse members from form data
@@ -65,9 +65,9 @@ export const actions: Actions = {
 		
 		// Save step data
 		await onboardingService.saveStep4(locals.user!.id, { skip: false, members });
-		
+
 		// Complete onboarding
 		const result = await onboardingService.completeOnboarding(locals.user!.id);
-		throw redirect(302, `/o/${result.slug}/dashboard`);
+		throw redirect(302, '/onboarding/selesai');
 	}
 };

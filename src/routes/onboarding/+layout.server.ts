@@ -20,7 +20,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 
 	// Get or create onboarding session
 	let session = await getOnboardingSession(locals.db, locals.user.id);
-	
+
 	if (!session) {
 		// Create new session
 		const { OnboardingService } = await import('$lib/services/onboarding');
@@ -29,19 +29,33 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 		session = await getOnboardingSession(locals.db, locals.user.id);
 	}
 
-	// If completed, redirect to dashboard
-	if (session?.is_completed) {
-		throw redirect(302, '/dashboard');
-	}
-
 	// Determine current step from URL or session
 	const path = url.pathname;
 	let currentStep = 1;
-	
+
 	if (path.includes('langkah-2')) currentStep = 2;
 	else if (path.includes('langkah-3')) currentStep = 3;
 	else if (path.includes('langkah-4')) currentStep = 4;
 	else if (path.includes('selesai')) currentStep = 5;
+
+	// If completed and not on selesai page, redirect to selesai
+	if (session?.is_completed && !path.includes('selesai')) {
+		throw redirect(302, '/onboarding/selesai');
+	}
+
+	// If completed and on selesai page, load organization data
+	if (session?.is_completed && path.includes('selesai')) {
+		const { OrganizationService } = await import('$lib/services/organization');
+		const orgService = new OrganizationService(locals.db);
+		const organization = await orgService.getByUserId(locals.user.id);
+
+		return {
+			user: locals.user,
+			onboarding: session,
+			currentStep: 5,
+			organization
+		};
+	}
 
 	// Don't allow skipping steps
 	const maxCompleted = JSON.parse(session?.completed_steps || '[]').length;

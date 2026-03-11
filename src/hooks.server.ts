@@ -77,9 +77,17 @@ export const handle: Handle = async ({ event, resolve }) => {
 				
 				if (!needsOnboard && isInOnboarding) {
 					// User already has org but trying to access onboarding
+					// Get organization slug
+					const org = await event.locals.db
+						.selectFrom('organizations')
+						.select('slug')
+						.where('id', '=', user.organizationId!)
+						.executeTakeFirst();
+
+					const redirectPath = org?.slug ? `/o/${org.slug}/dashboard` : '/dashboard';
 					return new Response(null, {
 						status: 302,
-						headers: { Location: `/o/${user.organizationId}/dashboard` }
+						headers: { Location: redirectPath }
 					});
 				}
 			}

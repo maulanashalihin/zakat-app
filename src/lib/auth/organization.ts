@@ -162,14 +162,15 @@ export async function loadOrganizationContext(
     .selectAll()
     .where('slug', '=', orgSlug)
     .executeTakeFirst();
-  
+
   if (!organization) {
     throw error(404, 'Organisasi yang Anda cari tidak ada');
   }
-  
-  // Check access
-  requireOrganizationAccess(user, organization.id);
-  
+
+  // Check access - cast user to User for compatibility
+  const userAsUser = user as User;
+  requireOrganizationAccess(userAsUser, organization.id);
+
   // Get sectors
   const sectors = await db
     .selectFrom('sectors')
@@ -177,19 +178,19 @@ export async function loadOrganizationContext(
     .where('organization_id', '=', organization.id)
     .where('is_active', '=', 1)
     .execute();
-  
+
   // Get settings
   const settings = await db
     .selectFrom('app_settings')
     .select(['default_beras_per_jiwa', 'default_uang_per_jiwa', 'active_period_id'])
     .where('organization_id', '=', organization.id)
     .executeTakeFirst();
-  
+
   return {
     organization,
-    user,
+    user: userAsUser,
     sectors,
-    settings
+    settings: settings ?? null
   };
 }
 
