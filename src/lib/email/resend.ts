@@ -1,4 +1,4 @@
-import { RESEND_API_TOKEN, FROM_EMAIL, REPLY_TO_EMAIL } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 
 export interface EmailOptions {
   to: string | string[];
@@ -19,13 +19,13 @@ interface ResendResponse {
  * Works reliably in Cloudflare Workers environment
  */
 export async function sendEmail(options: EmailOptions): Promise<{ success: boolean; error?: string }> {
-  if (!RESEND_API_TOKEN) {
+  if (!env.RESEND_API_TOKEN) {
     console.warn('RESEND_API_TOKEN not configured');
     return { success: false, error: 'Email service not configured' };
   }
 
-  const from = options.from || FROM_EMAIL || 'onboarding@resend.dev';
-  const replyTo = options.replyTo || REPLY_TO_EMAIL;
+  const from = options.from || env.FROM_EMAIL || 'onboarding@resend.dev';
+  const replyTo = options.replyTo || env.REPLY_TO_EMAIL;
 
   // Ensure to is always an array
   const to = Array.isArray(options.to) ? options.to : [options.to];
@@ -68,7 +68,7 @@ export async function sendEmail(options: EmailOptions): Promise<{ success: boole
  * Check if email service is configured
  */
 export function isEmailConfigured(): boolean {
-  return !!RESEND_API_TOKEN && !!FROM_EMAIL;
+  return !!env.RESEND_API_TOKEN && !!env.FROM_EMAIL;
 }
 
 /**

@@ -1,5 +1,5 @@
 import { Google } from 'arctic';
-import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 
 /**
  * Create Google OAuth client
@@ -7,7 +7,7 @@ import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from '$env/static/private';
  * @returns Google OAuth client or null if credentials not configured
  */
 export function createGoogleOAuthClient(baseUrl: string): Google | null {
-  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
     console.warn('[Google OAuth] Credentials not configured');
     return null;
   }
@@ -24,7 +24,7 @@ export function createGoogleOAuthClient(baseUrl: string): Google | null {
 
   const redirectUri = `${baseUrl.replace(/\/$/, '')}/auth/google/callback`;
 
-  return new Google(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, redirectUri);
+  return new Google(env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET, redirectUri);
 }
 
 /** Generate random state for OAuth CSRF protection */
