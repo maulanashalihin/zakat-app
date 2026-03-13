@@ -1,14 +1,45 @@
 <script>
-  import { Users, Plus, Search, Filter, Edit, Trash2, MapPin, LayoutGrid, Table2 } from 'lucide-svelte';
+  import { Users, Plus, Search, Edit, Trash2, MapPin, LayoutGrid, Table2, X } from 'lucide-svelte';
 
   let { data } = $props();
 
   const organization = data.organization;
-  const sectors = data.sectors;
-  const muzaki = data.muzaki;
+  const sectors = data.sectors || [];
+  const muzakiList = data.muzaki || [];
   const user = data.user;
 
   let viewMode = $state('card'); // 'card' or 'table'
+
+  // Filter state
+  let searchQuery = $state('');
+  let selectedSector = $state('');
+  let selectedType = $state('');
+
+  // Filter data locally
+  let filteredMuzaki = $derived.by(() => {
+    let result = muzakiList;
+
+    if (searchQuery.trim()) {
+      const search = searchQuery.trim().toLowerCase();
+      result = result.filter(m => m.name.toLowerCase().includes(search));
+    }
+
+    if (selectedSector) {
+      result = result.filter(m => m.sector_id === selectedSector);
+    }
+
+    if (selectedType) {
+      result = result.filter(m => m.jenis_zakat === selectedType);
+    }
+
+    return result;
+  });
+
+  function clearFilters() {
+    searchQuery = '';
+    selectedSector = '';
+    selectedType = '';
+  }
 
   function formatDate(timestamp) {
     if (!timestamp) return '-';
@@ -63,48 +94,65 @@
     </div>
   </div>
 
-  <!-- Filters -->
-  <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/40 dark:border-slate-700/40 shadow-[0_20px_50px_rgb(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgb(0,0,0,0.4)] rounded-[1.5rem] lg:rounded-[2rem] p-4 sm:p-6 mb-6">
-    <form class="flex flex-col lg:flex-row gap-3 sm:gap-4">
-      <div class="flex-1 relative">
-        <Search class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+  <!-- Filters - Simple Single Line -->
+  <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/40 dark:border-slate-700/40 shadow-lg rounded-2xl p-3 mb-6">
+    <div class="flex flex-wrap items-center gap-2">
+      <!-- Search -->
+      <div class="relative flex-1 min-w-[200px]">
+        <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <input
           type="text"
-          name="search"
-          placeholder="Cari nama muzaki..."
-          class="w-full pl-12 pr-4 py-3 sm:py-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium"
+          placeholder="Cari nama..."
+          class="w-full pl-9 pr-3 py-2 text-sm rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+          bind:value={searchQuery}
         />
       </div>
-      <div class="grid grid-cols-2 lg:flex gap-3 sm:gap-4">
-        <div class="relative">
-          <Filter class="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-slate-400" />
-          <select name="sector" class="w-full pl-9 sm:pl-12 pr-2 sm:pr-4 py-3 sm:py-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium appearance-none cursor-pointer">
-            <option value="">Semua Sektor</option>
-            {#each sectors as sector}
-              <option value={sector.id}>{sector.name}</option>
-            {/each}
-          </select>
-        </div>
-        <div class="relative">
-          <Filter class="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-slate-400" />
-          <select name="type" class="w-full pl-9 sm:pl-12 pr-2 sm:pr-4 py-3 sm:py-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium appearance-none cursor-pointer">
-            <option value="">Semua Jenis</option>
-            <option value="beras">Beras</option>
-            <option value="uang">Uang</option>
-          </select>
-        </div>
-        <button type="submit" class="col-span-2 sm:col-span-1 flex items-center justify-center gap-2 py-3 sm:py-3.5 px-4 sm:px-6 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-sm sm:text-base border-2 border-slate-200 dark:border-slate-700 hover:border-primary-500 dark:hover:border-primary-500 transition-all">
-          <Search class="w-4 sm:w-5 h-4 sm:h-5" />
-          <span>Filter</span>
+
+      <!-- Sector -->
+      <select
+        bind:value={selectedSector}
+        class="px-3 py-2 text-sm rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all cursor-pointer"
+      >
+        <option value="">📍 Sektor</option>
+        {#each sectors as sector}
+          <option value={sector.id}>{sector.name}</option>
+        {/each}
+      </select>
+
+      <!-- Type -->
+      <select
+        bind:value={selectedType}
+        class="px-3 py-2 text-sm rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all cursor-pointer"
+      >
+        <option value="">💰 Jenis</option>
+        <option value="beras">🌾 Beras</option>
+        <option value="uang">💵 Uang</option>
+      </select>
+
+      <!-- Clear -->
+      {#if searchQuery || selectedSector || selectedType}
+        <button
+          onclick={clearFilters}
+          class="flex items-center justify-center w-9 h-9 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl transition-all"
+          title="Hapus filter"
+        >
+          <X class="w-4 h-4" />
         </button>
-      </div>
-    </form>
+      {/if}
+    </div>
   </div>
 
-  <!-- Card View (Mobile & Optional Desktop) -->
+  <!-- Results Count -->
+  <div class="mb-4 flex items-center justify-between">
+    <p class="text-sm text-slate-600 dark:text-slate-400">
+      Menampilkan <span class="font-bold text-slate-900 dark:text-white">{filteredMuzaki.length}</span> data
+    </p>
+  </div>
+
+  <!-- Card View -->
   {#if viewMode === 'card'}
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
-      {#each muzaki as m}
+      {#each filteredMuzaki as m}
         <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/40 dark:border-slate-700/40 shadow-[0_20px_50px_rgb(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgb(0,0,0,0.4)] rounded-[1.5rem] lg:rounded-[2rem] p-4 sm:p-6 hover:-translate-y-1 transition-all">
           <!-- Header -->
           <div class="flex items-start gap-3 sm:gap-4 mb-4">
@@ -194,7 +242,7 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-            {#each muzaki as m, i}
+            {#each filteredMuzaki as m, i}
               <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
                 <td class="px-6 py-4 text-sm font-medium text-slate-500 dark:text-slate-400">{i + 1}</td>
                 <td class="px-6 py-4">

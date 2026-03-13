@@ -1,14 +1,100 @@
 <script lang="ts">
-	import { ArrowLeft, Search, Filter, Calendar, Package, Coins, Users, User, MapPin, FileText, Download } from 'lucide-svelte';
+	import { ArrowLeft, Search, Filter, Calendar, Package, Coins, Users, User, MapPin, FileText, Download, X } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
 
 	let { data } = $props();
 
+	// Filter state
 	let searchQuery = $state('');
 	let dateFrom = $state('');
 	let dateTo = $state('');
 	let selectedSector = $state('');
 	let selectedAsnaf = $state('');
+
+	function setQuickDate(preset: 'today' | 'week' | 'month' | 'year') {
+		const now = new Date();
+		if (preset === 'today') {
+			dateFrom = now.toISOString().split('T')[0];
+			dateTo = dateFrom;
+		} else if (preset === 'week') {
+			const startOfWeek = new Date(now);
+			startOfWeek.setDate(now.getDate() - now.getDay());
+			dateFrom = startOfWeek.toISOString().split('T')[0];
+			dateTo = now.toISOString().split('T')[0];
+		} else if (preset === 'month') {
+			const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+			dateFrom = startOfMonth.toISOString().split('T')[0];
+			dateTo = now.toISOString().split('T')[0];
+		} else if (preset === 'year') {
+			const startOfYear = new Date(now.getFullYear(), 0, 1);
+			dateFrom = startOfYear.toISOString().split('T')[0];
+			dateTo = now.toISOString().split('T')[0];
+		}
+	}
+
+	// Filter data locally
+	let filteredDistributions = $derived.by(() => {
+		let result = data.distributions;
+
+		if (searchQuery.trim()) {
+			const search = searchQuery.trim().toLowerCase();
+			result = result.filter(d => 
+				d.mustahik_name.toLowerCase().includes(search) ||
+				(d.petugas_name && d.petugas_name.toLowerCase().includes(search))
+			);
+		}
+
+		if (selectedSector) {
+			result = result.filter(d => d.sector_id === selectedSector);
+		}
+
+		if (selectedAsnaf) {
+			result = result.filter(d => d.kategori_asnaf === selectedAsnaf);
+		}
+
+		if (dateFrom) {
+			const fromDate = new Date(dateFrom).getTime();
+			result = result.filter(d => d.tanggal_distribusi >= fromDate);
+		}
+
+		if (dateTo) {
+			const toDate = new Date(dateTo).getTime();
+			// Add 24 hours to include the end date
+			result = result.filter(d => d.tanggal_distribusi <= toDate + (24 * 60 * 60 * 1000));
+		}
+
+		return result;
+	});
+
+	let filteredSummary = $derived.by(() => {
+		const list = filteredDistributions;
+		const byAsnaf: Record<string, { count: number; beras: number; uang: number }> = {};
+		
+		list.forEach(d => {
+			const asnaf = d.kategori_asnaf || 'unknown';
+			if (!byAsnaf[asnaf]) {
+				byAsnaf[asnaf] = { count: 0, beras: 0, uang: 0 };
+			}
+			byAsnaf[asnaf].count++;
+			byAsnaf[asnaf].beras += d.jumlah_beras || 0;
+			byAsnaf[asnaf].uang += d.jumlah_uang || 0;
+		});
+
+		return {
+			totalMustahik: list.length,
+			totalBeras: list.reduce((sum, d) => sum + (d.jumlah_beras || 0), 0),
+			totalUang: list.reduce((sum, d) => sum + (d.jumlah_uang || 0), 0),
+			byAsnaf
+		};
+	});
+
+	function clearFilters() {
+		searchQuery = '';
+		dateFrom = '';
+		dateTo = '';
+		selectedSector = '';
+		selectedAsnaf = '';
+	}
 
 	function formatDate(timestamp: number | null) {
 		if (!timestamp) return '-';
@@ -112,7 +198,7 @@
 					</div>
 					<div>
 						<p class="text-xs text-slate-500">Total Mustahik</p>
-						<p class="text-xl font-bold text-slate-900 dark:text-white">{data.summary.totalMustahik}</p>
+						<p class="text-xl font-bold text-slate-900 dark:text-white">{filteredSummary.totalMustahik}</p>
 					</div>
 				</div>
 			</div>
@@ -123,7 +209,7 @@
 					</div>
 					<div>
 						<p class="text-xs text-slate-500">Total Beras</p>
-						<p class="text-xl font-bold text-slate-900 dark:text-white">{data.summary.totalBeras.toFixed(1)} <span class="text-sm">kg</span></p>
+						<p class="text-xl font-bold text-slate-900 dark:text-white">{filteredSummary.totalBeras.toFixed(1)} <span class="text-sm">kg</span></p>
 					</div>
 				</div>
 			</div>
@@ -134,7 +220,7 @@
 					</div>
 					<div>
 						<p class="text-xs text-slate-500">Total Uang</p>
-						<p class="text-xl font-bold text-slate-900 dark:text-white">Rp {(data.summary.totalUang / 1000000).toFixed(1)}<span class="text-sm">jt</span></p>
+						<p class="text-xl font-bold text-slate-900 dark:text-white">Rp {(filteredSummary.totalUang / 1000000).toFixed(1)}<span class="text-sm">jt</span></p>
 					</div>
 				</div>
 			</div>
@@ -146,7 +232,7 @@
 					<div>
 						<p class="text-xs text-slate-500">Rata-rata/Mustahik</p>
 						<p class="text-xl font-bold text-slate-900 dark:text-white">
-							{data.summary.totalMustahik > 0 ? (data.summary.totalBeras / data.summary.totalMustahik).toFixed(1) : 0} <span class="text-sm">kg</span>
+							{filteredSummary.totalMustahik > 0 ? (filteredSummary.totalBeras / filteredSummary.totalMustahik).toFixed(1) : 0} <span class="text-sm">kg</span>
 						</p>
 					</div>
 				</div>
@@ -154,11 +240,11 @@
 		</div>
 
 		<!-- Breakdown by Asnaf -->
-		{#if Object.keys(data.summary.byAsnaf).length > 0}
+		{#if Object.keys(filteredSummary.byAsnaf).length > 0}
 			<div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800">
 				<h3 class="text-sm font-semibold text-slate-900 dark:text-white mb-3">Distribusi per Asnaf</h3>
 				<div class="flex flex-wrap gap-2">
-					{#each Object.entries(data.summary.byAsnaf) as [asnaf, stats]}
+					{#each Object.entries(filteredSummary.byAsnaf) as [asnaf, stats]}
 						<div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
 							<span class="text-xs font-medium {getAsnafColor(asnaf)}">{getAsnafLabel(asnaf)}</span>
 							<span class="text-xs text-slate-500">{stats.count} orang</span>
@@ -172,58 +258,87 @@
 
 		<!-- Filters -->
 		<div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800">
-			<form method="GET" class="flex flex-col lg:flex-row gap-3">
-				<div class="flex-1 relative">
-					<Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-					<input
-						type="text"
-						name="search"
-						placeholder="Cari nama mustahik..."
-						class="w-full pl-9 pr-4 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm"
-						bind:value={searchQuery}
-					/>
+			<div class="flex flex-col gap-3">
+				<!-- Quick Date Presets -->
+				<div class="flex flex-wrap gap-2">
+					<button onclick={() => setQuickDate('today')} class="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-all">Hari Ini</button>
+					<button onclick={() => setQuickDate('week')} class="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-all">Minggu Ini</button>
+					<button onclick={() => setQuickDate('month')} class="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-all">Bulan Ini</button>
+					<button onclick={() => setQuickDate('year')} class="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-all">Tahun Ini</button>
 				</div>
-				<select name="sector" class="px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm" bind:value={selectedSector}>
-					<option value="">Semua Sektor</option>
-					{#each data.sectors as sector}
-						<option value={sector.id}>{sector.name}</option>
-					{/each}
-				</select>
-				<select name="asnaf" class="px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm" bind:value={selectedAsnaf}>
-					<option value="">Semua Asnaf</option>
-					<option value="fakir">Fakir</option>
-					<option value="miskin">Miskin</option>
-					<option value="amil">Amil</option>
-					<option value="mualaf">Mualaf</option>
-					<option value="riqab">Riqab</option>
-					<option value="gharim">Gharim</option>
-					<option value="fisabilillah">Fisabilillah</option>
-					<option value="ibnu_sabil">Ibnu Sabil</option>
-				</select>
-				<div class="flex gap-2">
+
+				<div class="flex flex-wrap items-center gap-2">
+					<!-- Search -->
+					<div class="flex-1 min-w-[200px] relative">
+						<Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+						<input
+							type="text"
+							placeholder="Cari nama..."
+							class="w-full pl-9 pr-4 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm"
+							bind:value={searchQuery}
+						/>
+					</div>
+
+					<!-- Sector -->
+					<select class="px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm" bind:value={selectedSector}>
+						<option value="">📍 Sektor</option>
+						{#each data.sectors as sector}
+							<option value={sector.id}>{sector.name}</option>
+						{/each}
+					</select>
+
+					<!-- Asnaf -->
+					<select class="px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm" bind:value={selectedAsnaf}>
+						<option value="">📋 Asnaf</option>
+						<option value="fakir">Fakir</option>
+						<option value="miskin">Miskin</option>
+						<option value="amil">Amil</option>
+						<option value="mualaf">Mualaf</option>
+						<option value="riqab">Riqab</option>
+						<option value="gharim">Gharim</option>
+						<option value="fisabilillah">Fisabilillah</option>
+						<option value="ibnu_sabil">Ibnu Sabil</option>
+					</select>
+
+					<!-- Date From -->
 					<input
 						type="date"
-						name="dateFrom"
 						placeholder="Dari"
 						class="px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm"
 						bind:value={dateFrom}
 					/>
+
+					<!-- Date To -->
 					<input
 						type="date"
-						name="dateTo"
 						placeholder="Sampai"
 						class="px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm"
 						bind:value={dateTo}
 					/>
+
+					<!-- Clear -->
+					{#if searchQuery || selectedSector || selectedAsnaf || dateFrom || dateTo}
+						<button
+							onclick={clearFilters}
+							class="flex items-center justify-center w-9 h-9 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg transition-all"
+							title="Hapus filter"
+						>
+							<X class="w-4 h-4" />
+						</button>
+					{/if}
 				</div>
-				<button type="submit" class="px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">
-					Filter
-				</button>
-			</form>
+			</div>
+		</div>
+
+		<!-- Results Count -->
+		<div class="mb-4 flex items-center justify-between">
+			<p class="text-sm text-slate-600 dark:text-slate-400">
+				Menampilkan <span class="font-bold text-slate-900 dark:text-white">{filteredDistributions.length}</span> data
+			</p>
 		</div>
 
 		<!-- Distribution List -->
-		{#if data.distributions.length === 0}
+		{#if filteredDistributions.length === 0}
 			<div class="bg-white dark:bg-slate-900 rounded-xl p-12 text-center border border-slate-200 dark:border-slate-800">
 				<div class="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
 					<FileText class="w-8 h-8 text-slate-400" />
@@ -247,7 +362,7 @@
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-							{#each data.distributions as d}
+							{#each filteredDistributions as d}
 								<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
 									<td class="px-4 py-3 whitespace-nowrap">
 										<div class="text-sm text-slate-900 dark:text-white">{formatDate(d.tanggal_distribusi)}</div>

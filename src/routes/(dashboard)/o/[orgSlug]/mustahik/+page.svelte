@@ -105,7 +105,7 @@
     const labels = {
       belum_disalurkan: 'Belum',
       siap_disalurkan: 'Siap',
-      sudah_disalurkan: 'Sudah'
+      sudah_disalurkan: 'Diterima'
     };
     return labels[status] || '-';
   }
@@ -191,7 +191,7 @@
       <p class="text-2xl sm:text-3xl font-bold text-amber-600 dark:text-amber-400">{filteredStats.siap}</p>
     </div>
     <div class="bg-blue-50/80 dark:bg-blue-900/20 backdrop-blur-xl border border-blue-200/40 dark:border-blue-800/40 rounded-2xl p-4">
-      <p class="text-xs sm:text-sm text-blue-600 dark:text-blue-400">✓ Sudah</p>
+      <p class="text-xs sm:text-sm text-blue-600 dark:text-blue-400">📦 Diterima</p>
       <p class="text-2xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400">{filteredStats.sudah}</p>
     </div>
   </div>
@@ -229,7 +229,7 @@
         <option value="">📋 Status</option>
         <option value="belum_disalurkan">⏳ Belum</option>
         <option value="siap_disalurkan">⚡ Siap</option>
-        <option value="sudah_disalurkan">✓ Sudah</option>
+        <option value="sudah_disalurkan">📦 Diterima</option>
       </select>
 
       <!-- Prioritas -->
@@ -278,14 +278,14 @@
             </div>
             <span class="inline-flex items-center px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm font-bold {m.status_distribusi === 'sudah_disalurkan' ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400' : m.status_distribusi === 'siap_disalurkan' ? 'bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}">
               {#if m.status_distribusi === 'sudah_disalurkan'}
-                ✓
+                📦
               {:else if m.status_distribusi === 'siap_disalurkan'}
                 ⚡
               {:else}
                 ⏳
               {/if}
               <span class="hidden sm:inline ml-1">
-                {m.status_distribusi === 'sudah_disalurkan' ? 'Sudah' : m.status_distribusi === 'siap_disalurkan' ? 'Siap' : 'Belum'}
+                {m.status_distribusi === 'sudah_disalurkan' ? 'Diterima' : m.status_distribusi === 'siap_disalurkan' ? 'Siap' : 'Belum'}
               </span>
             </span>
           </div>
@@ -431,7 +431,7 @@
                 </td>
                 <td class="px-4 py-3">
                   <span class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-bold {m.status_distribusi === 'sudah_disalurkan' ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400' : m.status_distribusi === 'siap_disalurkan' ? 'bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}">
-                    {m.status_distribusi === 'sudah_disalurkan' ? '✓ Sudah' : m.status_distribusi === 'siap_disalurkan' ? '⚡ Siap' : '⏳ Belum'}
+                    {m.status_distribusi === 'sudah_disalurkan' ? '📦 Diterima' : m.status_distribusi === 'siap_disalurkan' ? '⚡ Siap' : '⏳ Belum'}
                   </span>
                 </td>
                 <td class="px-4 py-3">
