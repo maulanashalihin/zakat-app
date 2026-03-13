@@ -21,5 +21,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 		throw redirect(302, '/onboarding/langkah-1');
 	}
 
-	return { organization };
+	// Get sectors count from tempData (step 3)
+	const sectorsCount = tempData.step3?.sectors?.length || 0;
+
+	return { 
+		organization: {
+			...organization,
+			sectorsCount
+		} 
+	};
 };

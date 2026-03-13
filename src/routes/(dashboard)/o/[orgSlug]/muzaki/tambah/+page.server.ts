@@ -1,12 +1,21 @@
 import type { PageServerLoad, Actions } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
 
-export const load: PageServerLoad = async ({ parent }) => {
-	const { organization, sectors, user } = await parent();
+export const load: PageServerLoad = async ({ parent, locals }) => {
+	const { organization, user } = await parent();
+	
+	// Load sectors directly from database
+	const sectors = await locals.db
+		.selectFrom('sectors')
+		.select(['id', 'name'])
+		.where('organization_id', '=', organization.id)
+		.where('is_active', '=', 1)
+		.orderBy('name', 'asc')
+		.execute();
 	
 	// Petugas only sees their assigned sector
-	const availableSectors = user.currentRole === 'petugas' && user.sector_id 
-		? sectors.filter((s: { id: string }) => s.id === user.sector_id)
+	const availableSectors = user.currentRole === 'petugas' && user.currentSectorId 
+		? sectors.filter((s) => s.id === user.currentSectorId)
 		: sectors;
 	
 	return {
@@ -15,7 +24,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 };
 
 export const actions: Actions = {
-	default: async ({ request, locals }) => {
+	default: async ({ request, locals, params }) => {
 		// ✅ FIXED: Use locals.user.currentOrganizationId directly
 		if (!locals.user) {
 			throw fail(401, { error: 'Unauthorized' });
@@ -68,9 +77,9 @@ export const actions: Actions = {
 				sector_id: sectorId!,
 				petugas_id: locals.user.id,
 				name: name!,
-				address: address || null,
+				address: address || '',
 				jumlah_jiwa: jumlahJiwa,
-				jenis_zakat: jenisZakat,
+				jenis_zakat: jenisZakat as 'beras' | 'uang' | 'keduanya',
 				jumlah_beras: jenisZakat === 'uang' ? 0 : jumlahBeras,
 				jumlah_uang: jenisZakat === 'beras' ? 0 : jumlahUang,
 				created_at: now,
@@ -78,6 +87,6 @@ export const actions: Actions = {
 			})
 			.execute();
 
-		throw redirect(302, `/o/${locals.user.currentOrganizationId}/muzaki`);
+		throw redirect(302, `/o/${params.orgSlug}/muzaki`);
 	}
 };

@@ -19,8 +19,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 					.where('organization_id', '=', org.id)
 					.executeTakeFirst(),
 				locals.db
-					.selectFrom('users')
-					.select((eb) => eb.fn.count('id').as('count'))
+					.selectFrom('organization_members')
+					.select((eb) => eb.fn.count('user_id').as('count'))
 					.where('organization_id', '=', org.id)
 					.executeTakeFirst()
 			]);

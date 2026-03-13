@@ -1,14 +1,15 @@
 <script>
-  import { Users, UserPlus, Eye, Shield, ArrowRight, Mail } from 'lucide-svelte';
+  import { Building2, Settings, MapPin, Users, CheckCircle, ArrowRight, Edit3 } from 'lucide-svelte';
 
-  let { data, form } = $props();
+  let { data } = $props();
 
-  const user = $derived(data.user || { name: '', email: '' });
-  const errors = $derived(form?.errors || {});
+  const step1 = $derived(data.step1);
+  const step2 = $derived(data.step2);
+  const step3 = $derived(data.step3);
 </script>
 
 <svelte:head>
-  <title>Setup Tim - ZakatApp</title>
+  <title>Konfirmasi - ZakatApp</title>
 </svelte:head>
 
 <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/40 dark:border-slate-700/40 shadow-[0_20px_50px_rgb(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgb(0,0,0,0.4)] rounded-[2rem] p-8 relative transform -rotate-1 hover:rotate-0 transition-transform duration-500">
@@ -19,83 +20,152 @@
   </div>
 
   <div class="mb-8">
-    <h2 class="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">Daftar Tim</h2>
+    <h2 class="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">Konfirmasi Data</h2>
     <p class="text-slate-600 dark:text-slate-400 font-medium mt-1">
-      Tambahkan petugas yang akan membantu mengelola zakat
+      Periksa kembali data organisasi Anda sebelum menyelesaikan setup
     </p>
   </div>
 
   <form method="POST" class="space-y-6">
-    <!-- Admin Info Card -->
-    <div class="bg-gradient-to-br from-primary-50 to-emerald-50 dark:from-primary-900/20 dark:to-emerald-900/20 rounded-2xl p-5 border border-primary-100 dark:border-primary-800">
-      <div class="flex items-center gap-4">
-        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-extrabold text-xl shadow-lg shadow-primary-500/40">
-          {user.name.charAt(0).toUpperCase()}
+    <!-- Step 1: Organization Info -->
+    <div class="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-5 border border-slate-200 dark:border-slate-700">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
+            <Building2 class="w-5 h-5 text-primary-600" />
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-900 dark:text-white">Informasi Organisasi</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Langkah 1</p>
+          </div>
         </div>
-        <div class="flex-1">
-          <p class="font-extrabold text-slate-900 dark:text-white text-lg">{user.name}</p>
-          <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">{user.email}</p>
-        </div>
-        <span class="px-3 py-1.5 text-xs font-bold rounded-full bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">
-          Admin Utama
-        </span>
+        <a href="/onboarding/langkah-1" class="text-sm text-primary-600 hover:text-primary-500 font-medium flex items-center gap-1">
+          <Edit3 class="w-4 h-4" />
+          Edit
+        </a>
       </div>
-    </div>
-
-    <!-- Team Members (optional) -->
-    <div>
-      <label for="teamEmails" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-        Email Anggota Tim <span class="text-slate-400 dark:text-slate-500 font-normal">(opsional)</span>
-      </label>
-      <div class="relative">
-        <Mail class="absolute left-4 top-4 w-5 h-5 text-slate-400" />
-        <textarea
-          id="teamEmails"
-          name="teamEmails"
-          placeholder="Masukkan email petugas, pisahkan dengan koma atau baris baru"
-          class="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all resize-none"
-          rows="3"
-        ></textarea>
-      </div>
-      <p class="mt-2 text-xs text-slate-500 dark:text-slate-400 font-medium">Contoh: petugas1@email.com, petugas2@email.com</p>
-    </div>
-
-    <!-- Role Selection -->
-    <div>
-      <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">
-        Role untuk Anggota Tim
-      </label>
+      
       <div class="space-y-3">
-        <label class="flex items-center p-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 cursor-pointer hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all group">
-          <input type="radio" name="teamRole" value="petugas" checked class="w-5 h-5 text-primary-600 focus:ring-primary-500" />
-          <div class="ml-4 flex-1">
-            <div class="flex items-center gap-2">
-              <Users class="w-5 h-5 text-primary-600" />
-              <p class="font-extrabold text-slate-900 dark:text-white">Petugas</p>
-            </div>
-            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">Bisa mencatat dan mengedit data muzaki/mustahik</p>
+        <div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">Nama</p>
+          <p class="font-semibold text-slate-900 dark:text-white">{step1?.name || '-'}</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">Slug/URL</p>
+          <p class="font-medium text-slate-700 dark:text-slate-300">{step1?.slug || '-'}</p>
+        </div>
+        {#if step1?.address}
+          <div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">Alamat</p>
+            <p class="font-medium text-slate-700 dark:text-slate-300">{step1.address}</p>
           </div>
-        </label>
-        <label class="flex items-center p-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 cursor-pointer hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all group">
-          <input type="radio" name="teamRole" value="viewer" class="w-5 h-5 text-primary-600 focus:ring-primary-500" />
-          <div class="ml-4 flex-1">
-            <div class="flex items-center gap-2">
-              <Eye class="w-5 h-5 text-primary-600" />
-              <p class="font-extrabold text-slate-900 dark:text-white">Viewer</p>
-            </div>
-            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">Hanya bisa melihat data, tidak bisa mengedit</p>
+        {/if}
+        {#if step1?.phone}
+          <div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">Telepon</p>
+            <p class="font-medium text-slate-700 dark:text-slate-300">{step1.phone}</p>
           </div>
-        </label>
+        {/if}
       </div>
     </div>
 
-    {#if errors?.team}
-      <p class="text-sm text-red-600 dark:text-red-400 font-medium">{errors.team}</p>
-    {/if}
+    <!-- Step 2: Zakat Settings -->
+    <div class="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-5 border border-slate-200 dark:border-slate-700">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+            <Settings class="w-5 h-5 text-emerald-600" />
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-900 dark:text-white">Ketetapan Zakat</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Langkah 2</p>
+          </div>
+        </div>
+        <a href="/onboarding/langkah-2" class="text-sm text-primary-600 hover:text-primary-500 font-medium flex items-center gap-1">
+          <Edit3 class="w-4 h-4" />
+          Edit
+        </a>
+      </div>
+      
+      <div class="grid grid-cols-2 gap-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-3">
+          <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">Beras per Jiwa</p>
+          <p class="text-lg font-bold text-slate-900 dark:text-white">{step2?.defaultBerasPerJiwa || '-'} kg</p>
+        </div>
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-3">
+          <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">Uang per Jiwa</p>
+          <p class="text-lg font-bold text-slate-900 dark:text-white">Rp {step2?.defaultUangPerJiwa?.toLocaleString('id-ID') || '-'}</p>
+        </div>
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-3">
+          <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">Tahun Hijriyah</p>
+          <p class="text-lg font-bold text-slate-900 dark:text-white">{step2?.yearHijri || '-'}</p>
+        </div>
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-3">
+          <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">Tahun Masehi</p>
+          <p class="text-lg font-bold text-slate-900 dark:text-white">{step2?.yearMasehi || '-'}</p>
+        </div>
+      </div>
+      
+      {#if step2?.periodName}
+        <div class="mt-3 bg-white dark:bg-slate-800 rounded-xl p-3">
+          <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">Nama Periode</p>
+          <p class="font-semibold text-slate-900 dark:text-white">{step2.periodName}</p>
+        </div>
+      {/if}
+    </div>
 
+    <!-- Step 3: Sectors -->
+    <div class="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-5 border border-slate-200 dark:border-slate-700">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+            <MapPin class="w-5 h-5 text-amber-600" />
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-900 dark:text-white">Sektor/Wilayah</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Langkah 3</p>
+          </div>
+        </div>
+        <a href="/onboarding/langkah-3" class="text-sm text-primary-600 hover:text-primary-500 font-medium flex items-center gap-1">
+          <Edit3 class="w-4 h-4" />
+          Edit
+        </a>
+      </div>
+      
+      <div class="flex flex-wrap gap-2">
+        {#each step3?.sectors || [] as sector}
+          <span 
+            class="px-3 py-1.5 rounded-full text-sm font-medium"
+            style="background-color: {sector.color}20; color: {sector.color}; border: 1px solid {sector.color}40;"
+          >
+            {sector.name}
+          </span>
+        {:else}
+          <p class="text-slate-500 dark:text-slate-400 text-sm italic">Tidak ada sektor yang ditambahkan</p>
+        {/each}
+      </div>
+    </div>
+
+    <!-- Info Note -->
+    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+      <div class="flex gap-3">
+        <Users class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+        <div>
+          <p class="text-sm font-medium text-blue-900 dark:text-blue-100">
+            Tambah Petugas Nanti
+          </p>
+          <p class="text-xs text-blue-700 dark:text-blue-300 mt-1">
+            Anda bisa menambahkan petugas dan mengatur hak akses setelah masuk ke dashboard. Klik menu "Master Data &gt; Petugas" nanti.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Submit Button -->
     <div class="pt-4">
       <button type="submit" class="w-full flex items-center justify-center gap-2 py-4 px-6 bg-primary-600 hover:bg-primary-500 text-white rounded-xl font-bold text-lg transition-all duration-200 shadow-[0_0_40px_-10px_rgba(16,185,129,0.5)] hover:shadow-[0_0_60px_-15px_rgba(16,185,129,0.7)] hover:-translate-y-1">
-        Selesai
+        <CheckCircle class="w-5 h-5" />
+        Selesaikan Setup
         <ArrowRight class="w-5 h-5" />
       </button>
     </div>

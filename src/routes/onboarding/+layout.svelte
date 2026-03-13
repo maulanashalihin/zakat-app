@@ -8,7 +8,7 @@
     { id: 1, label: 'Organisasi' },
     { id: 2, label: 'Zakat' },
     { id: 3, label: 'Sektor' },
-    { id: 4, label: 'Tim' }
+    { id: 4, label: 'Konfirmasi' }
   ];
 
   const currentStep = data.currentStep;

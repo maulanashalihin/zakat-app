@@ -1,4 +1,5 @@
 import type { PageServerLoad } from './$types';
+import { sql } from 'kysely';
 
 export const load: PageServerLoad = async ({ locals, parent }) => {
 	const { organization } = await parent();
@@ -24,23 +25,29 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 		.select(['sector_id'])
 		.select(({ fn }) => [
 			fn.count('id').as('count'),
-			fn.sum('jumlah_jiwa').as('total_jiwa'),
-			fn.sum('jumlah_beras').as('total_beras'),
-			fn.sum('jumlah_uang').as('total_uang')
+			sql<number>`cast(jumlah_jiwa as float)`.as('total_jiwa'),
+			sql<number>`cast(jumlah_beras as float)`.as('total_beras'),
+			sql<number>`cast(jumlah_uang as float)`.as('total_uang')
 		])
 		.where('organization_id', '=', orgId)
 		.where('sector_id', 'in', sectorIds)
 		.groupBy('sector_id')
 		.execute();
 
-	// ✅ OPTIMIZED: Get all mustahik stats in ONE query with GROUP BY
+	// ✅ OPTIMIZED: Get all mustahik allocation stats in ONE query with GROUP BY
+	// Join mustahik_allocations with mustahik to get sector_id
 	const mustahikStats = await locals.db
-		.selectFrom('mustahik')
-		.select(['sector_id'])
-		.select(({ fn }) => fn.count('id').as('count'))
-		.where('organization_id', '=', orgId)
-		.where('sector_id', 'in', sectorIds)
-		.groupBy('sector_id')
+		.selectFrom('mustahik_allocations')
+		.innerJoin('mustahik', 'mustahik_allocations.mustahik_id', 'mustahik.id')
+		.select(['mustahik.sector_id'])
+		.select(({ fn }) => [
+			fn.count('mustahik_allocations.id').as('count'),
+			sql<number>`coalesce(sum(cast(mustahik_allocations.alokasi_beras as float)), 0)`.as('total_beras'),
+			sql<number>`coalesce(sum(cast(mustahik_allocations.alokasi_uang_lokal as float)), 0)`.as('total_uang')
+		])
+		.where('mustahik.organization_id', '=', orgId)
+		.where('mustahik.sector_id', 'in', sectorIds)
+		.groupBy('mustahik.sector_id')
 		.execute();
 
 	// ✅ OPTIMIZED: Create lookup maps for O(1) access
@@ -55,20 +62,22 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 
 	const mustahikStatsMap = new Map(
 		mustahikStats.map(s => [s.sector_id, {
-			mustahikCount: Number(s.count || 0)
+			mustahikCount: Number(s.count || 0),
+			mustahikBeras: Number(s.total_beras || 0),
+			mustahikUang: Number(s.total_uang || 0)
 		}])
 	);
 
 	// ✅ OPTIMIZED: Merge data in memory (no more queries!)
 	const sectorsWithStats = sectors.map(sector => ({
 		...sector,
-		...muzakiStatsMap.get(sector.id),
-		...mustahikStatsMap.get(sector.id),
 		muzakiCount: muzakiStatsMap.get(sector.id)?.muzakiCount || 0,
 		totalJiwa: muzakiStatsMap.get(sector.id)?.totalJiwa || 0,
 		totalBeras: muzakiStatsMap.get(sector.id)?.totalBeras || 0,
 		totalUang: muzakiStatsMap.get(sector.id)?.totalUang || 0,
-		mustahikCount: mustahikStatsMap.get(sector.id)?.mustahikCount || 0
+		mustahikCount: mustahikStatsMap.get(sector.id)?.mustahikCount || 0,
+		mustahikBeras: mustahikStatsMap.get(sector.id)?.mustahikBeras || 0,
+		mustahikUang: mustahikStatsMap.get(sector.id)?.mustahikUang || 0
 	}));
 
 	return {

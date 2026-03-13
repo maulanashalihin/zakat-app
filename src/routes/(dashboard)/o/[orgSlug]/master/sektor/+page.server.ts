@@ -35,7 +35,7 @@ export const actions: Actions = {
 		}
 
 		// ✅ FIXED: Get organization from locals.user.organizationId
-		const orgId = locals.user.organizationId;
+		const orgId = locals.user.currentOrganizationId;
 		if (!orgId) {
 			return fail(400, { error: 'Organisasi tidak ditemukan' });
 		}
@@ -86,7 +86,7 @@ export const actions: Actions = {
 			return fail(400, { error: 'Data tidak lengkap' });
 		}
 
-		const orgId = locals.user.organizationId;
+		const orgId = locals.user.currentOrganizationId;
 		if (!orgId) {
 			return fail(400, { error: 'Organisasi tidak ditemukan' });
 		}
@@ -130,7 +130,7 @@ export const actions: Actions = {
 			return fail(400, { error: 'ID tidak valid' });
 		}
 
-		const orgId = locals.user.organizationId;
+		const orgId = locals.user.currentOrganizationId;
 		if (!orgId) {
 			return fail(400, { error: 'Organisasi tidak ditemukan' });
 		}

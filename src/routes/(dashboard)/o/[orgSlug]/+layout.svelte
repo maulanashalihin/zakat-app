@@ -1,6 +1,6 @@
 <script>
   import { page } from '$app/state';
-  import { Sun, Moon, Menu, X, Building2, Users, User, HandHeart, MapPin, Settings, UsersRound, FileText, Calendar, LogOut } from 'lucide-svelte';
+  import { Sun, Moon, Menu, X, Building2, Users, User, HandHeart, MapPin, Settings, UsersRound, FileText, Calendar, LogOut, PackageOpen, Truck, BarChart3 } from 'lucide-svelte';
   import { theme } from '$lib/stores/theme.svelte';
 
   let { children, data } = $props();
@@ -73,7 +73,7 @@
         <div class="flex-1 min-w-0 overflow-hidden">
           <h2 class="font-extrabold truncate text-slate-900 dark:text-white">{organization.name}</h2>
           <p class="text-xs font-medium text-slate-500 dark:text-slate-400 truncate capitalize">
-            {user.role === 'super_admin' ? 'Super Admin' : user.role === 'admin' ? 'Admin' : user.role === 'petugas' ? 'Petugas' : 'Viewer'}
+            {user.globalRole === 'super_admin' ? 'Super Admin' : user.currentRole === 'admin' ? 'Admin' : user.currentRole === 'petugas' ? 'Petugas' : 'Viewer'}
           </p>
         </div>
       </a>
@@ -101,7 +101,7 @@
           <span>Dashboard</span>
         </a>
 
-        {#if user.currentRole === 'admin' || user.currentRole === 'super_admin' || user.currentRole === 'petugas'}
+        {#if user.currentRole === 'admin' || user.globalRole === 'super_admin' || user.currentRole === 'petugas'}
           <a
             href="/o/{organization.slug}/muzaki"
             onclick={closeMobileMenu}
@@ -112,7 +112,7 @@
           </a>
         {/if}
 
-        {#if user.currentRole === 'admin' || user.currentRole === 'super_admin'}
+        {#if user.currentRole === 'admin' || user.globalRole === 'super_admin'}
           <a
             href="/o/{organization.slug}/mustahik"
             onclick={closeMobileMenu}
@@ -120,6 +120,40 @@
           >
             <HandHeart class="w-5 h-5 shrink-0" />
             <span>Mustahik</span>
+          </a>
+
+          <!-- Alokasi - Admin Only -->
+          <a
+            href="/o/{organization.slug}/mustahik/alokasi"
+            onclick={closeMobileMenu}
+            class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 ml-4 {isActive('/o/' + organization.slug + '/mustahik/alokasi') ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-500/40' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}"
+          >
+            <PackageOpen class="w-5 h-5 shrink-0" />
+            <span>Alokasi Zakat</span>
+          </a>
+        {/if}
+
+        <!-- Distribusi - Admin & Petugas -->
+        {#if user.currentRole === 'admin' || user.globalRole === 'super_admin' || user.currentRole === 'petugas'}
+          <a
+            href="/o/{organization.slug}/mustahik/distribusi"
+            onclick={closeMobileMenu}
+            class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 {user.currentRole === 'admin' || user.globalRole === 'super_admin' ? 'ml-4' : ''} {isActive('/o/' + organization.slug + '/mustahik/distribusi') ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/40' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}"
+          >
+            <Truck class="w-5 h-5 shrink-0" />
+            <span>Distribusi Zakat</span>
+          </a>
+        {/if}
+
+        <!-- Laporan Distribusi - Admin Only -->
+        {#if user.currentRole === 'admin' || user.globalRole === 'super_admin'}
+          <a
+            href="/o/{organization.slug}/laporan/distribusi"
+            onclick={closeMobileMenu}
+            class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 {isActive('/o/' + organization.slug + '/laporan/distribusi') ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/40' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}"
+          >
+            <BarChart3 class="w-5 h-5 shrink-0" />
+            <span>Laporan Distribusi</span>
           </a>
         {/if}
 
@@ -133,7 +167,7 @@
         </a>
       </div>
 
-      {#if user.currentRole === 'admin' || user.currentRole === 'super_admin'}
+      {#if user.currentRole === 'admin' || user.globalRole === 'super_admin'}
         <div class="mt-8">
           <div class="px-4 mb-3">
             <span class="text-xs font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">Master Data</span>
@@ -195,7 +229,7 @@
           <User class="w-5 h-5 shrink-0" />
           <span>Profile</span>
         </a>
-        {#if user.role === 'super_admin'}
+        {#if user.globalRole === 'super_admin'}
           <a
             href="/dashboard/users"
             onclick={closeMobileMenu}

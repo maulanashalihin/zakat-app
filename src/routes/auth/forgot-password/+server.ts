@@ -1,5 +1,7 @@
 import { json, error, type RequestHandler } from '@sveltejs/kit';
 import { generateId } from '$lib/auth/session';
+import { sendEmail } from '$lib/email/resend';
+import { generatePasswordResetEmail } from '$lib/email/templates/password-reset';
 import { z } from 'zod';
 
 const forgotPasswordSchema = z.object({
@@ -22,7 +24,7 @@ async function hashToken(token: string): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-export const POST: RequestHandler = async ({ request, locals }) => {
+export const POST: RequestHandler = async ({ request, locals, url }) => {
   try {
     const body = await request.json();
     
@@ -38,15 +40,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     const user = await locals.db
       .selectFrom('users')
       .where('email', '=', email)
-      .select(['id', 'password_hash'])
+      .select(['id', 'name', 'password_hash'])
       .executeTakeFirst();
 
     // Don't reveal if user exists (security best practice)
-    // But for better UX, we'll just return success
     if (!user) {
       return json({
         success: true,
-        message: 'If an account exists, password reset instructions have been sent'
+        message: 'Jika akun ada, instruksi reset password telah dikirim ke email Anda'
       });
     }
 
@@ -54,7 +55,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     if (!user.password_hash) {
       return json({
         success: true,
-        message: 'If an account exists, password reset instructions have been sent'
+        message: 'Akun ini menggunakan login Google. Silakan login dengan Google.'
       });
     }
 
@@ -83,24 +84,31 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       })
       .execute();
 
-    // TODO: Send email with reset link
-    // For development, we'll log the link to console
-    const resetUrl = `/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
-    console.log('\n🔐 Password Reset Link:\n', resetUrl, '\n');
+    // Send password reset email
+    const resetUrl = `${url.origin}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
+    const emailTemplate = generatePasswordResetEmail({
+      name: user.name || 'Pengguna',
+      resetUrl,
+      expiresIn: '1 jam'
+    });
 
-    // In production, you would send an email here
-    // Example:
-    // await sendEmail({
-    //   to: email,
-    //   subject: 'Reset your password',
-    //   html: `Click here to reset: <a href="${resetUrl}">${resetUrl}</a>`
-    // });
+    const emailResult = await sendEmail({
+      to: email,
+      subject: 'Reset Password ZakatApp',
+      html: emailTemplate.html,
+      text: emailTemplate.text
+    });
+
+    if (!emailResult.success) {
+      console.error('Failed to send password reset email:', emailResult.error);
+      // Still return success to not reveal if email exists
+    }
+
+    console.log('\n🔐 Password Reset Link:', resetUrl, '\n');
 
     return json({
       success: true,
-      message: 'If an account exists, password reset instructions have been sent',
-      // Only for development - remove in production!
-      devLink: resetUrl
+      message: 'Jika akun ada, instruksi reset password telah dikirim ke email Anda'
     });
 
   } catch (err: any) {

@@ -11,31 +11,48 @@ export const ROLES = {
   VIEWER: 'viewer' as const
 };
 
-// Check if user is Super Admin
-export function isSuperAdmin(user: User | SessionUser | null): boolean {
-  return user?.role === ROLES.SUPER_ADMIN;
+// Type guard to check if user is SessionUser
+function isSessionUser(user: User | SessionUser): user is SessionUser {
+  return 'globalRole' in user;
 }
 
-// Check if user is Admin
+// Check if user is Super Admin
+export function isSuperAdmin(user: User | SessionUser | null): boolean {
+  if (!user) return false;
+  // SessionUser has globalRole, User from DB has global_role
+  const globalRole = isSessionUser(user) ? user.globalRole : user.global_role;
+  return globalRole === ROLES.SUPER_ADMIN;
+}
+
+// Check if user is Admin (current organization role)
 export function isAdmin(user: User | SessionUser | null): boolean {
-  return user?.role === ROLES.ADMIN;
+  if (!user) return false;
+  // Only SessionUser has currentRole (per-organization role)
+  if (!isSessionUser(user)) return false;
+  return user.currentRole === ROLES.ADMIN;
 }
 
 // Check if user is Petugas
 export function isPetugas(user: User | SessionUser | null): boolean {
-  return user?.role === ROLES.PETUGAS;
+  if (!user) return false;
+  if (!isSessionUser(user)) return false;
+  return user.currentRole === ROLES.PETUGAS;
 }
 
 // Check if user is Viewer
 export function isViewer(user: User | SessionUser | null): boolean {
-  return user?.role === ROLES.VIEWER;
+  if (!user) return false;
+  if (!isSessionUser(user)) return false;
+  return user.currentRole === ROLES.VIEWER;
 }
 
 // Check if user has specific role
 export function hasRole(user: User | SessionUser | null, roles: UserRole | UserRole[]): boolean {
   if (!user) return false;
   const roleList = Array.isArray(roles) ? roles : [roles];
-  return roleList.includes(user.role as UserRole);
+  // Only SessionUser has currentRole for permission checks
+  if (!isSessionUser(user)) return false;
+  return roleList.includes(user.currentRole as UserRole);
 }
 
 // Check if user can access organization
@@ -45,8 +62,14 @@ export function canAccessOrganization(user: User | SessionUser | null, orgId: st
   // Super admin can access any organization
   if (isSuperAdmin(user)) return true;
   
-  // Regular user can only access their assigned organization
-  const userOrgId = 'organization_id' in user ? user.organization_id : user.organizationId;
+  // Regular user can access if they have an active membership for this organization
+  if (isSessionUser(user) && user.memberships && user.memberships.length > 0) {
+    return user.memberships.some(m => m.organizationId === orgId && m.isActive);
+  }
+  
+  // Fallback for backward compatibility
+  const userOrgId = isSessionUser(user) ? user.primaryOrganizationId : 
+                    user.primary_organization_id;
   return userOrgId === orgId;
 }
 
@@ -54,7 +77,9 @@ export function canAccessOrganization(user: User | SessionUser | null, orgId: st
 export function getUserOrganizationId(user: User | SessionUser | null): string | null {
   if (!user) return null;
   if (isSuperAdmin(user)) return null; // Super admin doesn't have fixed org
-  return 'organization_id' in user ? user.organization_id : user.organizationId;
+  // Check primaryOrganizationId for SessionUser, primary_organization_id for User
+  return isSessionUser(user) ? user.primaryOrganizationId : 
+         user.primary_organization_id;
 }
 
 // Resolve organization ID from various sources
@@ -66,7 +91,7 @@ export async function resolveOrganizationId(
   if (!user) return null;
   
   // Super admin with specific org slug
-  if (isSuperAdmin(user) && params?.orgSlug) {
+  if (user.global_role === ROLES.SUPER_ADMIN && params?.orgSlug) {
     const org = await db
       .selectFrom('organizations')
       .select('id')
@@ -76,10 +101,10 @@ export async function resolveOrganizationId(
   }
   
   // Super admin without org slug - return null (needs to select)
-  if (isSuperAdmin(user)) return null;
+  if (user.global_role === ROLES.SUPER_ADMIN) return null;
   
   // Regular user - return their organization
-  return user.organization_id;
+  return user.primary_organization_id;
 }
 
 // Require organization access or throw
@@ -109,7 +134,7 @@ export async function getAccessibleOrganizations(
 ): Promise<Organization[]> {
   if (!user) return [];
   
-  if (isSuperAdmin(user)) {
+  if (user.global_role === ROLES.SUPER_ADMIN) {
     return db
       .selectFrom('organizations')
       .selectAll()
@@ -118,11 +143,11 @@ export async function getAccessibleOrganizations(
       .execute();
   }
   
-  if (user.organization_id) {
+  if (user.primary_organization_id) {
     const org = await db
       .selectFrom('organizations')
       .selectAll()
-      .where('id', '=', user.organization_id)
+      .where('id', '=', user.primary_organization_id)
       .executeTakeFirst();
     return org ? [org] : [];
   }
@@ -134,7 +159,8 @@ export async function getAccessibleOrganizations(
 export function needsOnboarding(user: User | SessionUser | null): boolean {
   if (!user) return false;
   if (isSuperAdmin(user)) return false; // Super admin doesn't need org
-  const userOrgId = 'organization_id' in user ? user.organization_id : user.organizationId;
+  const userOrgId = isSessionUser(user) ? user.primaryOrganizationId : 
+                    user.primary_organization_id;
   return !userOrgId;
 }
 

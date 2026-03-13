@@ -15,7 +15,16 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 		throw error(404, 'Data mustahik tidak ditemukan');
 	}
 	
-	return { mustahik };
+	// Load sectors
+	const sectors = await locals.db
+		.selectFrom('sectors')
+		.select(['id', 'name'])
+		.where('organization_id', '=', organization.id)
+		.where('is_active', '=', 1)
+		.orderBy('name', 'asc')
+		.execute();
+	
+	return { mustahik, sectors };
 };
 
 export const actions: Actions = {
@@ -25,7 +34,8 @@ export const actions: Actions = {
 		const name = formData.get('name')?.toString().trim();
 		const address = formData.get('address')?.toString().trim();
 		const sectorId = formData.get('sectorId')?.toString();
-		const kategori = formData.get('kategori')?.toString();
+		const kategoriAsnaf = formData.get('kategoriAsnaf')?.toString();
+		const kategoriPrioritas = formData.get('kategoriPrioritas')?.toString();
 		const jumlahJiwa = parseInt(formData.get('jumlahJiwa')?.toString() || '1');
 		const status = formData.get('status')?.toString();
 		const keterangan = formData.get('keterangan')?.toString().trim();
@@ -52,12 +62,14 @@ export const actions: Actions = {
 			.updateTable('mustahik')
 			.set({
 				name: name!,
-				address: address || null,
+				address: address || '',
 				sector_id: sectorId!,
-				kategori: kategori || null,
+				
 				jumlah_jiwa: jumlahJiwa,
-				status: status || 'belum',
-				keterangan: keterangan || null,
+				status_distribusi: (status as 'belum_disalurkan' | 'siap_disalurkan' | 'sudah_disalurkan') || 'belum_disalurkan',
+				kategori_asnaf: (kategoriAsnaf as 'fakir' | 'miskin' | 'amil' | 'mualaf' | 'riqab' | 'gharim' | 'fisabilillah' | 'ibnu_sabil') || null,
+				kategori_prioritas: (kategoriPrioritas as 'tinggi' | 'sedang' | 'rendah') || 'sedang',
+				catatan_distribusi: keterangan || null,
 				updated_at: now
 			})
 			.where('id', '=', params.id)

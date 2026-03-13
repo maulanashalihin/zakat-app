@@ -9,17 +9,17 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 	}
 
 	// Super admin doesn't need onboarding
-	if (locals.user.currentRole === 'super_admin') {
+	if (locals.user.globalRole === 'super_admin') {
 		throw redirect(302, '/admin/dashboard');
 	}
 
 	// If user already has organization, skip onboarding
-	if (locals.user.organizationId) {
+	if (locals.user.currentOrganizationId) {
 		// Get organization slug
 		const org = await locals.db
 			.selectFrom('organizations')
 			.select('slug')
-			.where('id', '=', locals.user.organizationId)
+			.where('id', '=', locals.user.currentOrganizationId)
 			.executeTakeFirst();
 
 		const redirectPath = org?.slug ? `/o/${org.slug}/dashboard` : '/dashboard';

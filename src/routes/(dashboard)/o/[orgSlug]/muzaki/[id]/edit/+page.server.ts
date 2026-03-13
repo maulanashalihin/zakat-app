@@ -4,6 +4,7 @@ import { fail, redirect, error } from '@sveltejs/kit';
 export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	const { organization, user } = await parent();
 	
+	// Load muzaki data
 	const muzaki = await locals.db
 		.selectFrom('muzaki')
 		.selectAll()
@@ -16,12 +17,22 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
 	}
 	
 	// Check permission
-	if (user.currentRole === 'petugas' && user.sector_id && muzaki.sector_id !== user.sector_id) {
+	if (user.currentRole === 'petugas' && user.currentSectorId && muzaki.sector_id !== user.currentSectorId) {
 		throw error(403, 'Tidak memiliki akses ke data ini');
 	}
 	
+	// Load sectors
+	const sectors = await locals.db
+		.selectFrom('sectors')
+		.select(['id', 'name'])
+		.where('organization_id', '=', organization.id)
+		.where('is_active', '=', 1)
+		.orderBy('name', 'asc')
+		.execute();
+	
 	return {
-		muzaki
+		muzaki,
+		sectors
 	};
 };
 
@@ -63,10 +74,10 @@ export const actions: Actions = {
 			.updateTable('muzaki')
 			.set({
 				name: name!,
-				address: address || null,
+				address: address || '',
 				sector_id: sectorId!,
 				jumlah_jiwa: jumlahJiwa,
-				jenis_zakat: jenisZakat,
+				jenis_zakat: jenisZakat as 'beras' | 'uang' | 'keduanya',
 				jumlah_beras: jenisZakat === 'uang' ? 0 : jumlahBeras,
 				jumlah_uang: jenisZakat === 'beras' ? 0 : jumlahUang,
 				updated_at: now

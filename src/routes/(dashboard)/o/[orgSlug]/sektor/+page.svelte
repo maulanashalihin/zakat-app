@@ -1,5 +1,5 @@
 <script>
-  import { MapPin, TrendingUp, Users, HandHeart, Package, DollarSign, ArrowRight } from 'lucide-svelte';
+  import { MapPin, TrendingUp, Users, HandHeart, Package, DollarSign, ArrowRight, Plus } from 'lucide-svelte';
 
   let { data } = $props();
 
@@ -19,7 +19,7 @@
   <!-- Header -->
   <div class="mb-8">
     <h1 class="text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">Rekap per Sektor</h1>
-    <p class="text-slate-600 dark:text-slate-400 font-medium mt-1">Ringkasan pengumpulan zakat per sektor</p>
+    <p class="text-slate-600 dark:text-slate-400 font-medium mt-1">Ringkasan pengumpulan & penyaluran zakat per sektor</p>
   </div>
 
   <!-- Sektor Cards -->
@@ -44,55 +44,69 @@
         </div>
 
         <!-- Stats -->
-        <div class="p-6 space-y-4">
-          <div class="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+        <div class="p-6 space-y-3">
+          <!-- Muzaki Stats -->
+          <div class="flex items-center justify-between p-3 rounded-xl bg-blue-50 dark:bg-blue-900/10">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
                 <Users class="w-5 h-5 text-blue-600 dark:text-blue-400" />
               </div>
-              <span class="text-sm font-bold text-slate-600 dark:text-slate-400">Muzaki</span>
-            </div>
-            <span class="text-2xl font-extrabold text-slate-900 dark:text-white">{formatNumber(sector.muzakiCount)}</span>
-          </div>
-
-          <div class="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center">
-                <TrendingUp class="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              <div>
+                <span class="text-sm font-bold text-slate-600 dark:text-slate-400">Muzaki</span>
+                <div class="text-xs text-slate-500">{formatNumber(sector.totalJiwa)} jiwa</div>
               </div>
-              <span class="text-sm font-bold text-slate-600 dark:text-slate-400">Total Jiwa</span>
             </div>
-            <span class="text-2xl font-extrabold text-slate-900 dark:text-white">{formatNumber(sector.totalJiwa)}</span>
+            <span class="text-xl font-extrabold text-slate-900 dark:text-white">{formatNumber(sector.muzakiCount)}</span>
           </div>
 
-          <div class="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/20 flex items-center justify-center">
-                <Package class="w-5 h-5 text-amber-600 dark:text-amber-400" />
+          <!-- Muzaki Beras & Uang -->
+          <div class="grid grid-cols-2 gap-2">
+            <div class="flex items-center justify-between p-3 rounded-xl bg-amber-50 dark:bg-amber-900/10">
+              <div class="flex items-center gap-2">
+                <Package class="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                <span class="text-xs font-bold text-slate-600 dark:text-slate-400">Beras</span>
               </div>
-              <span class="text-sm font-bold text-slate-600 dark:text-slate-400">Total Beras</span>
+              <span class="text-sm font-extrabold text-amber-600 dark:text-amber-400">{formatNumber(sector.totalBeras)} <span class="text-xs">kg</span></span>
             </div>
-            <span class="text-xl font-extrabold text-amber-600 dark:text-amber-400">{formatNumber(sector.totalBeras)} <span class="text-sm font-bold">kg</span></span>
-          </div>
-
-          <div class="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/20 flex items-center justify-center">
-                <DollarSign class="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <div class="flex items-center justify-between p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/10">
+              <div class="flex items-center gap-2">
+                <DollarSign class="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <span class="text-xs font-bold text-slate-600 dark:text-slate-400">Uang</span>
               </div>
-              <span class="text-sm font-bold text-slate-600 dark:text-slate-400">Total Uang</span>
+              <span class="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">{formatNumber(sector.totalUang)}</span>
             </div>
-            <span class="text-xl font-extrabold text-emerald-600 dark:text-emerald-400">Rp {formatNumber(sector.totalUang)}</span>
           </div>
 
-          <div class="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+          <!-- Divider -->
+          <div class="border-t border-slate-200 dark:border-slate-700 my-2"></div>
+
+          <!-- Mustahik Stats -->
+          <div class="flex items-center justify-between p-3 rounded-xl bg-green-50 dark:bg-green-900/10">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-xl bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
                 <HandHeart class="w-5 h-5 text-green-600 dark:text-green-400" />
               </div>
               <span class="text-sm font-bold text-slate-600 dark:text-slate-400">Mustahik</span>
             </div>
-            <span class="text-2xl font-extrabold text-slate-900 dark:text-white">{formatNumber(sector.mustahikCount)}</span>
+            <span class="text-xl font-extrabold text-slate-900 dark:text-white">{formatNumber(sector.mustahikCount)}</span>
+          </div>
+
+          <!-- Mustahik Alokasi Beras & Uang -->
+          <div class="grid grid-cols-2 gap-2">
+            <div class="flex items-center justify-between p-3 rounded-xl bg-orange-50 dark:bg-orange-900/10">
+              <div class="flex items-center gap-2">
+                <Package class="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                <span class="text-xs font-bold text-slate-600 dark:text-slate-400">Alokasi Beras</span>
+              </div>
+              <span class="text-sm font-extrabold text-orange-600 dark:text-orange-400">{formatNumber(sector.mustahikBeras)} <span class="text-xs">kg</span></span>
+            </div>
+            <div class="flex items-center justify-between p-3 rounded-xl bg-teal-50 dark:bg-teal-900/10">
+              <div class="flex items-center gap-2">
+                <DollarSign class="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                <span class="text-xs font-bold text-slate-600 dark:text-slate-400">Alokasi Uang</span>
+              </div>
+              <span class="text-sm font-extrabold text-teal-600 dark:text-teal-400">{formatNumber(sector.mustahikUang)}</span>
+            </div>
           </div>
         </div>
 

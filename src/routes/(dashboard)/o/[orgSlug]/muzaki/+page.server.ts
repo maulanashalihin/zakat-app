@@ -18,39 +18,41 @@ export const load: PageServerLoad = async ({ locals, parent, url }) => {
 		.orderBy('name', 'asc')
 		.execute();
 
-	// Build query
+	// Build query with sector join
 	let query = locals.db
 		.selectFrom('muzaki')
+		.innerJoin('sectors', 'muzaki.sector_id', 'sectors.id')
 		.select([
-			'id',
-			'name',
-			'sector_id',
-			'jumlah_jiwa',
-			'jenis_zakat',
-			'jumlah_beras',
-			'jumlah_uang',
-			'created_at',
-			'petugas_id'
+			'muzaki.id',
+			'muzaki.name',
+			'muzaki.sector_id',
+			'muzaki.jumlah_jiwa',
+			'muzaki.jenis_zakat',
+			'muzaki.jumlah_beras',
+			'muzaki.jumlah_uang',
+			'muzaki.created_at',
+			'muzaki.petugas_id',
+			'sectors.name as sector_name'
 		])
-		.where('organization_id', '=', orgId);
+		.where('muzaki.organization_id', '=', orgId);
 
 	// Petugas restriction - check sector assignment
-	if (user.currentRole === 'petugas' && user.sectorId) {
-		query = query.where('sector_id', '=', user.sectorId);
+	if (user.currentRole === 'petugas' && user.currentSectorId) {
+		query = query.where('muzaki.sector_id', '=', user.currentSectorId);
 	} else if (sectorId) {
-		query = query.where('sector_id', '=', sectorId);
+		query = query.where('muzaki.sector_id', '=', sectorId);
 	}
 
 	// ✅ OPTIMIZED: Use parameterized search with proper escaping
 	if (search && search.trim().length > 0) {
 		const searchTerm = `%${search.trim()}%`;
-		query = query.where('name', 'like', searchTerm);
+		query = query.where('muzaki.name', 'like', searchTerm);
 	}
 
 	// ✅ OPTIMIZED: Add limit and order for pagination-ready query
 	const muzaki = await query
-		.orderBy('created_at', 'desc')
-		.limit(100) // Increased limit for better UX
+		.orderBy('muzaki.created_at', 'desc')
+		.limit(100)
 		.execute();
 
 	return { muzaki, sectors };
@@ -70,7 +72,7 @@ export const actions: Actions = {
 			.selectFrom('muzaki')
 			.select(['id', 'organization_id', 'petugas_id'])
 			.where('id', '=', id)
-			.where('organization_id', '=', locals.user?.organizationId!)
+			.where('organization_id', '=', locals.user?.currentOrganizationId!)
 			.executeTakeFirst();
 
 		if (!muzaki) {
@@ -78,7 +80,7 @@ export const actions: Actions = {
 		}
 
 		// Check permission
-		if (locals.user?.role !== 'super_admin' && locals.user?.role !== 'admin') {
+		if (locals.user?.currentRole !== 'super_admin' && locals.user?.currentRole !== 'admin') {
 			if (muzaki.petugas_id !== locals.user?.id) {
 				return fail(403, { error: 'Tidak memiliki izin' });
 			}

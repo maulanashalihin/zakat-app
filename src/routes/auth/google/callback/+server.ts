@@ -75,8 +75,8 @@ export const GET: RequestHandler = async ({ url, cookies, locals, platform }) =>
 					avatar: null,
 					email_verified: 1,
 					is_admin: 0,
-					role: 'viewer',
-					organization_id: null,
+					global_role: 'user',
+					primary_organization_id: null,
 					sector_id: null,
 					is_active: 1,
 					created_at: Date.now(),
@@ -105,7 +105,7 @@ export const GET: RequestHandler = async ({ url, cookies, locals, platform }) =>
 		const userData = await locals.db
 			.selectFrom('users')
 			.where('id', '=', userId)
-			.select(['role', 'organization_id'])
+			.select(['global_role', 'primary_organization_id'])
 			.executeTakeFirst();
 
 		// Create session
@@ -119,15 +119,15 @@ export const GET: RequestHandler = async ({ url, cookies, locals, platform }) =>
 		// Determine redirect URL based on user status
 		let redirectUrl: string;
 
-		if (userData?.role === 'super_admin') {
+		if (userData?.global_role === 'super_admin') {
 			// Super admin goes to admin dashboard
 			redirectUrl = '/admin/dashboard';
-		} else if (userData?.organization_id) {
+		} else if (userData?.primary_organization_id) {
 			// User with organization - get slug and redirect to org dashboard
 			const org = await locals.db
 				.selectFrom('organizations')
 				.select('slug')
-				.where('id', '=', userData.organization_id)
+				.where('id', '=', userData.primary_organization_id)
 				.executeTakeFirst();
 			
 			redirectUrl = org?.slug ? `/o/${org.slug}/dashboard` : '/organizations';

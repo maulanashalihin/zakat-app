@@ -11,16 +11,16 @@ export const load: PageServerLoad = async ({ locals }) => {
   // This dummy dashboard is deprecated in favor of organization-specific dashboards
   
   // Super admin goes to admin dashboard
-  if (locals.user.role === 'super_admin') {
+  if (locals.user.globalRole === 'super_admin') {
     throw redirect(302, '/admin/dashboard');
   }
 
   // User with organization goes to their org dashboard
-  if (locals.user.organizationId) {
+  if (locals.user.currentOrganizationId) {
     const org = await locals.db
       .selectFrom('organizations')
       .select('slug')
-      .where('id', '=', locals.user.organizationId)
+      .where('id', '=', locals.user.currentOrganizationId)
       .executeTakeFirst();
     
     if (org?.slug) {

@@ -82,6 +82,16 @@ CREATE TABLE `distributions` (
 	FOREIGN KEY (`petugas_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
+CREATE TABLE `email_verification_tokens` (
+	`id` text PRIMARY KEY NOT NULL,
+	`user_id` text NOT NULL,
+	`token_hash` text NOT NULL,
+	`expires_at` integer NOT NULL,
+	`used` integer DEFAULT false,
+	`created_at` integer,
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE cascade
+);
+--> statement-breakpoint
 CREATE TABLE `mustahik` (
 	`id` text PRIMARY KEY NOT NULL,
 	`organization_id` text NOT NULL,
@@ -92,6 +102,7 @@ CREATE TABLE `mustahik` (
 	`deskripsi_kondisi` text,
 	`tanggungan` integer DEFAULT 0,
 	`jumlah_jiwa` integer DEFAULT 1 NOT NULL,
+	`kategori_asnaf` text,
 	`kategori_prioritas` text DEFAULT 'sedang',
 	`status_distribusi` text DEFAULT 'belum_disalurkan',
 	`tanggal_distribusi` integer,
@@ -106,6 +117,13 @@ CREATE TABLE `mustahik` (
 	FOREIGN KEY (`periode_id`) REFERENCES `periods`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
+CREATE INDEX `idx_mustahik_organization_id` ON `mustahik` (`organization_id`);--> statement-breakpoint
+CREATE INDEX `idx_mustahik_sector_id` ON `mustahik` (`sector_id`);--> statement-breakpoint
+CREATE INDEX `idx_mustahik_created_at` ON `mustahik` (`created_at`);--> statement-breakpoint
+CREATE INDEX `idx_mustahik_org_sector` ON `mustahik` (`organization_id`,`sector_id`);--> statement-breakpoint
+CREATE INDEX `idx_mustahik_org_created` ON `mustahik` (`organization_id`,`created_at`);--> statement-breakpoint
+CREATE INDEX `idx_mustahik_org_name` ON `mustahik` (`organization_id`,`name`);--> statement-breakpoint
+CREATE INDEX `idx_mustahik_status_distribusi` ON `mustahik` (`status_distribusi`);--> statement-breakpoint
 CREATE TABLE `mustahik_allocations` (
 	`id` text PRIMARY KEY NOT NULL,
 	`mustahik_id` text NOT NULL,
@@ -144,6 +162,13 @@ CREATE TABLE `muzaki` (
 	FOREIGN KEY (`periode_id`) REFERENCES `periods`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
+CREATE INDEX `idx_muzaki_organization_id` ON `muzaki` (`organization_id`);--> statement-breakpoint
+CREATE INDEX `idx_muzaki_sector_id` ON `muzaki` (`sector_id`);--> statement-breakpoint
+CREATE INDEX `idx_muzaki_created_at` ON `muzaki` (`created_at`);--> statement-breakpoint
+CREATE INDEX `idx_muzaki_org_sector` ON `muzaki` (`organization_id`,`sector_id`);--> statement-breakpoint
+CREATE INDEX `idx_muzaki_org_created` ON `muzaki` (`organization_id`,`created_at`);--> statement-breakpoint
+CREATE INDEX `idx_muzaki_org_name` ON `muzaki` (`organization_id`,`name`);--> statement-breakpoint
+CREATE INDEX `idx_muzaki_petugas_id` ON `muzaki` (`petugas_id`);--> statement-breakpoint
 CREATE TABLE `onboarding_sessions` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
@@ -160,6 +185,25 @@ CREATE TABLE `onboarding_sessions` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `onboarding_sessions_user_id_unique` ON `onboarding_sessions` (`user_id`);--> statement-breakpoint
+CREATE TABLE `organization_members` (
+	`id` text PRIMARY KEY NOT NULL,
+	`user_id` text NOT NULL,
+	`organization_id` text NOT NULL,
+	`role` text DEFAULT 'viewer' NOT NULL,
+	`sector_id` text,
+	`is_active` integer DEFAULT true,
+	`joined_at` integer,
+	`created_at` integer,
+	`updated_at` integer,
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE cascade,
+	FOREIGN KEY (`organization_id`) REFERENCES `organizations`(`id`) ON UPDATE no action ON DELETE cascade,
+	FOREIGN KEY (`sector_id`) REFERENCES `sectors`(`id`) ON UPDATE no action ON DELETE set null
+);
+--> statement-breakpoint
+CREATE INDEX `idx_org_members_user_org` ON `organization_members` (`user_id`,`organization_id`);--> statement-breakpoint
+CREATE INDEX `idx_org_members_organization` ON `organization_members` (`organization_id`);--> statement-breakpoint
+CREATE INDEX `idx_org_members_user` ON `organization_members` (`user_id`);--> statement-breakpoint
+CREATE INDEX `idx_org_members_role` ON `organization_members` (`role`);--> statement-breakpoint
 CREATE TABLE `organizations` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
@@ -176,6 +220,18 @@ CREATE TABLE `organizations` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `organizations_slug_unique` ON `organizations` (`slug`);--> statement-breakpoint
+CREATE INDEX `idx_organizations_slug` ON `organizations` (`slug`);--> statement-breakpoint
+CREATE INDEX `idx_organizations_is_active` ON `organizations` (`is_active`);--> statement-breakpoint
+CREATE TABLE `password_reset_tokens` (
+	`id` text PRIMARY KEY NOT NULL,
+	`user_id` text NOT NULL,
+	`token_hash` text NOT NULL,
+	`expires_at` integer NOT NULL,
+	`used` integer DEFAULT false,
+	`created_at` integer,
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE cascade
+);
+--> statement-breakpoint
 CREATE TABLE `periods` (
 	`id` text PRIMARY KEY NOT NULL,
 	`organization_id` text NOT NULL,
@@ -201,7 +257,42 @@ CREATE TABLE `sectors` (
 	FOREIGN KEY (`organization_id`) REFERENCES `organizations`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
-ALTER TABLE `users` ADD `role` text DEFAULT 'viewer' NOT NULL;--> statement-breakpoint
-ALTER TABLE `users` ADD `organization_id` text REFERENCES organizations(id);--> statement-breakpoint
-ALTER TABLE `users` ADD `sector_id` text REFERENCES sectors(id);--> statement-breakpoint
-ALTER TABLE `users` ADD `is_active` integer DEFAULT true;
+CREATE INDEX `idx_sectors_organization_id` ON `sectors` (`organization_id`);--> statement-breakpoint
+CREATE INDEX `idx_sectors_is_active` ON `sectors` (`is_active`);--> statement-breakpoint
+CREATE INDEX `idx_sectors_org_active` ON `sectors` (`organization_id`,`is_active`);--> statement-breakpoint
+CREATE TABLE `sessions` (
+	`id` text PRIMARY KEY NOT NULL,
+	`user_id` text NOT NULL,
+	`expires_at` integer NOT NULL,
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE cascade
+);
+--> statement-breakpoint
+CREATE TABLE `users` (
+	`id` text PRIMARY KEY NOT NULL,
+	`email` text NOT NULL,
+	`name` text NOT NULL,
+	`bio` text,
+	`location` text,
+	`website` text,
+	`password_hash` text,
+	`provider` text DEFAULT 'email' NOT NULL,
+	`google_id` text,
+	`avatar` text,
+	`email_verified` integer DEFAULT false,
+	`is_admin` integer DEFAULT false,
+	`global_role` text DEFAULT 'user' NOT NULL,
+	`primary_organization_id` text,
+	`sector_id` text,
+	`is_active` integer DEFAULT true,
+	`created_at` integer,
+	`updated_at` integer,
+	FOREIGN KEY (`primary_organization_id`) REFERENCES `organizations`(`id`) ON UPDATE no action ON DELETE set null,
+	FOREIGN KEY (`sector_id`) REFERENCES `sectors`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `users_email_unique` ON `users` (`email`);--> statement-breakpoint
+CREATE UNIQUE INDEX `users_google_id_unique` ON `users` (`google_id`);--> statement-breakpoint
+CREATE INDEX `idx_users_primary_org` ON `users` (`primary_organization_id`);--> statement-breakpoint
+CREATE INDEX `idx_users_global_role` ON `users` (`global_role`);--> statement-breakpoint
+CREATE INDEX `idx_users_is_active` ON `users` (`is_active`);--> statement-breakpoint
+CREATE INDEX `idx_users_email_provider` ON `users` (`email`,`provider`);

@@ -140,6 +140,7 @@ export interface Database {
     deskripsi_kondisi: string | null;
     tanggungan: number | null;
     jumlah_jiwa: number;
+    kategori_asnaf: 'fakir' | 'miskin' | 'amil' | 'mualaf' | 'riqab' | 'gharim' | 'fisabilillah' | 'ibnu_sabil' | null;
     kategori_prioritas: 'tinggi' | 'sedang' | 'rendah' | null;
     status_distribusi: 'belum_disalurkan' | 'siap_disalurkan' | 'sudah_disalurkan' | null;
     tanggal_distribusi: number | null;

@@ -8,11 +8,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 
 	// If user has organization, redirect to it
-	if (locals.user.organizationId && locals.user.currentRole !== 'super_admin') {
+	if (locals.user.primaryOrganizationId && locals.user.globalRole !== 'super_admin') {
 		const org = await locals.db
 			.selectFrom('organizations')
 			.select('slug')
-			.where('id', '=', locals.user.organizationId)
+			.where('id', '=', locals.user.primaryOrganizationId)
 			.executeTakeFirst();
 		
 		if (org) {

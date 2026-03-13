@@ -5,7 +5,7 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 	const { organization, user } = await parent();
 	
 	// Only admin and super_admin can manage periods
-	if (user.currentRole !== 'admin' && user.currentRole !== 'super_admin') {
+	if (user.currentRole !== 'admin' && user.globalRole !== 'super_admin') {
 		throw error(403, 'Tidak memiliki izin mengelola periode');
 	}
 	
@@ -25,7 +25,7 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 export const actions: Actions = {
 	create: async ({ request, locals }) => {
 		// ✅ FIXED: Use locals.user directly
-		if (!locals.user || !['admin', 'super_admin'].includes(locals.user.currentRole)) {
+		if (!locals.user || !(locals.user.currentRole === 'admin' || locals.user.globalRole === 'super_admin')) {
 			throw error(403, 'Tidak memiliki izin');
 		}
 
@@ -56,7 +56,7 @@ export const actions: Actions = {
 		}
 
 		// ✅ FIXED: Get organization from locals.user
-		const orgId = locals.user.organizationId;
+		const orgId = locals.user.currentOrganizationId;
 		if (!orgId) {
 			return fail(400, { error: 'Organisasi tidak ditemukan' });
 		}
@@ -92,7 +92,7 @@ export const actions: Actions = {
 
 	update: async ({ request, locals }) => {
 		// ✅ FIXED: Use locals.user directly
-		if (!locals.user || !['admin', 'super_admin'].includes(locals.user.currentRole)) {
+		if (!locals.user || !(locals.user.currentRole === 'admin' || locals.user.globalRole === 'super_admin')) {
 			throw error(403, 'Tidak memiliki izin');
 		}
 
@@ -108,7 +108,7 @@ export const actions: Actions = {
 			return fail(400, { error: 'ID tidak valid' });
 		}
 
-		const orgId = locals.user.organizationId;
+		const orgId = locals.user.currentOrganizationId;
 		if (!orgId) {
 			return fail(400, { error: 'Organisasi tidak ditemukan' });
 		}
@@ -142,7 +142,7 @@ export const actions: Actions = {
 
 	delete: async ({ request, locals }) => {
 		// ✅ FIXED: Use locals.user directly
-		if (!locals.user || !['admin', 'super_admin'].includes(locals.user.currentRole)) {
+		if (!locals.user || !(locals.user.currentRole === 'admin' || locals.user.globalRole === 'super_admin')) {
 			throw error(403, 'Tidak memiliki izin');
 		}
 
@@ -153,7 +153,7 @@ export const actions: Actions = {
 			return fail(400, { error: 'ID tidak valid' });
 		}
 
-		const orgId = locals.user.organizationId;
+		const orgId = locals.user.currentOrganizationId;
 		if (!orgId) {
 			return fail(400, { error: 'Organisasi tidak ditemukan' });
 		}
@@ -179,7 +179,7 @@ export const actions: Actions = {
 
 	setActive: async ({ request, locals }) => {
 		// ✅ FIXED: Use locals.user directly
-		if (!locals.user || !['admin', 'super_admin'].includes(locals.user.currentRole)) {
+		if (!locals.user || !(locals.user.currentRole === 'admin' || locals.user.globalRole === 'super_admin')) {
 			throw error(403, 'Tidak memiliki izin');
 		}
 
@@ -190,7 +190,7 @@ export const actions: Actions = {
 			return fail(400, { error: 'ID tidak valid' });
 		}
 
-		const orgId = locals.user.organizationId;
+		const orgId = locals.user.currentOrganizationId;
 		if (!orgId) {
 			return fail(400, { error: 'Organisasi tidak ditemukan' });
 		}

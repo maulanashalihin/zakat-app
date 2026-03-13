@@ -8,7 +8,7 @@ export const load: PageServerLoad = async ({ locals }) => {
   }
 
   // Only super_admin can access users page
-  if (locals.user.role !== 'super_admin') {
+  if (locals.user.globalRole !== 'super_admin') {
     throw error(403, 'Access denied. Super admin only.');
   }
 

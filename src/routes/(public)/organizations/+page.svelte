@@ -14,7 +14,7 @@
     <div class="text-center mb-8">
       <h1 class="text-3xl font-bold text-slate-900">Pilih Organisasi</h1>
       <p class="text-slate-600 mt-2">
-        {#if user.currentRole === 'super_admin'}
+        {#if user.globalRole === 'super_admin'}
           Anda adalah Super Admin. Kelola semua organisasi.
         {:else}
           Pilih organisasi untuk mulai mengelola zakat
@@ -32,7 +32,7 @@
         </div>
         <h2 class="text-xl font-semibold text-slate-900 mb-2">Belum Ada Organisasi</h2>
         <p class="text-slate-600 mb-6">Anda belum terdaftar di organisasi mana pun.</p>
-        {#if user.currentRole === 'super_admin'}
+        {#if user.globalRole === 'super_admin'}
           <a href="/admin/organizations" class="btn-primary">
             Buat Organisasi Baru
           </a>
@@ -88,7 +88,7 @@
       </div>
 
       <!-- Create New (Super Admin only) -->
-      {#if user.currentRole === 'super_admin'}
+      {#if user.globalRole === 'super_admin'}
         <div class="mt-8 text-center">
           <a href="/admin/organizations" class="inline-flex items-center text-blue-600 hover:text-blue-700">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

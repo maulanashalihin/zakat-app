@@ -216,6 +216,12 @@ export const mustahik = sqliteTable('mustahik', {
   deskripsiKondisi: text('deskripsi_kondisi'),
   tanggungan: integer('tanggungan').default(0),
   jumlahJiwa: integer('jumlah_jiwa').notNull().default(1),
+  
+  // Kategori Asnaf (8 kategori penerima zakat)
+  kategoriAsnaf: text('kategori_asnaf', {
+    enum: ['fakir', 'miskin', 'amil', 'mualaf', 'riqab', 'gharim', 'fisabilillah', 'ibnu_sabil']
+  }),
+
   // Priority
   kategoriPrioritas: text('kategori_prioritas', {
     enum: ['tinggi', 'sedang', 'rendah']
@@ -407,8 +413,8 @@ export const organizationsRelations = relations(organizations, ({ many }) => ({
 }));
 
 export const usersRelations = relations(users, ({ one }) => ({
-  organization: one(organizations, {
-    fields: [users.organizationId],
+  primaryOrganization: one(organizations, {
+    fields: [users.primaryOrganizationId],
     references: [organizations.id]
   }),
   sector: one(sectors, {

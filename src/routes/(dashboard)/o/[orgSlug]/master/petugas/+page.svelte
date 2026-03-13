@@ -1,5 +1,6 @@
 <script>
-  import { UsersRound, Plus, Edit, Trash2, Check, X, User, Mail, Shield } from 'lucide-svelte';
+  import { UsersRound, Plus, Edit, Trash2, Check, X, User, Mail, Shield, Copy, Key, Send } from 'lucide-svelte';
+  import { fly, fade } from 'svelte/transition';
 
   let { data, form } = $props();
 
@@ -10,6 +11,57 @@
 
   let showAddForm = $state(false);
   let editingId = $state(null);
+  let copied = $state(false);
+  let showSuccessModal = $state(false);
+
+  // Show success modal when form returns success with generated password
+  $effect(() => {
+    if (form?.success && form?.generatedPassword) {
+      showSuccessModal = true;
+    }
+  });
+
+  async function copyPassword(password) {
+    try {
+      await navigator.clipboard.writeText(password);
+      copied = true;
+      setTimeout(() => copied = false, 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  }
+
+  async function copyCredentials(name, email, password, role) {
+    try {
+      const roleLabel = { 'admin': 'Admin', 'petugas': 'Petugas', 'viewer': 'Viewer' }[role] || role;
+      const text = `Assalamu'alaikum ${name},
+
+Anda telah ditambahkan sebagai ${roleLabel} di ZakatApp.
+
+📝 *Informasi Login:*
+Email: ${email}
+Password: ${password}
+
+Silakan login di: ${typeof window !== 'undefined' ? window.location.origin : ''}/login
+
+⚠️ Penting: Segera ganti password setelah login pertama kali.
+
+Terima kasih.`;
+      
+      await navigator.clipboard.writeText(text);
+      copied = true;
+      setTimeout(() => copied = false, 3000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  }
+
+  function closeSuccessModal() {
+    showSuccessModal = false;
+    showAddForm = false;
+    // Reset form by navigating to same page
+    window.location.reload();
+  }
 
   function formatDate(timestamp) {
     if (!timestamp) return '-';
@@ -63,6 +115,85 @@
     </button>
   </div>
 
+  <!-- Success Modal -->
+  {#if showSuccessModal && form?.generatedPassword}
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" transition:fade={{ duration: 200 }}>
+      <div class="bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl max-w-md w-full p-8 transform" transition:fly={{ y: 20, duration: 300 }}>
+        <!-- Success Icon -->
+        <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+          <Check class="w-10 h-10 text-green-600 dark:text-green-400" />
+        </div>
+        
+        <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white text-center mb-2">
+          Petugas Berhasil Ditambahkan!
+        </h3>
+        
+        <p class="text-slate-600 dark:text-slate-400 text-center mb-6">
+          Berikut password untuk <strong>{form.values?.name || 'petugas'}</strong>:
+        </p>
+        
+        <!-- Password Display -->
+        <div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 mb-3 border-2 border-dashed border-green-400 dark:border-green-600">
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wide font-bold">Email & Password</p>
+          <div class="space-y-2">
+            <div class="flex items-center gap-3">
+              <Mail class="w-5 h-5 text-slate-400 shrink-0" />
+              <code class="text-base font-mono text-slate-900 dark:text-white">{form.values?.email}</code>
+            </div>
+            <div class="flex items-center gap-3">
+              <Key class="w-5 h-5 text-green-600 dark:text-green-400 shrink-0" />
+              <code class="text-xl font-mono font-bold text-slate-900 dark:text-white tracking-wider">{form.generatedPassword}</code>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Copy Button -->
+        <button 
+          type="button"
+          onclick={() => copyCredentials(form.values?.name, form.values?.email, form.generatedPassword, form.values?.role)}
+          class="w-full py-3 px-4 mb-4 bg-green-100 dark:bg-green-900/30 hover:bg-green-200 dark:hover:bg-green-900/50 text-green-700 dark:text-green-400 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
+        >
+          {#if copied}
+            <Check class="w-5 h-5" />
+            Tersalin!  
+          {:else}
+            <Copy class="w-5 h-5" />
+            Copy Email & Password  
+          {/if}
+        </button>
+        
+        <!-- Email Status -->
+        {#if form?.emailSent}
+          <div class="flex items-center gap-2 text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 p-3 rounded-xl mb-4">
+            <Mail class="w-4 h-4 shrink-0" />
+            <span>Email dengan kredensial juga dikirim ke petugas</span>
+          </div>
+        {:else}
+          <div class="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-xl mb-4">
+            <Mail class="w-4 h-4 shrink-0" />
+            <span>Email gagal dikirim. Beritahu petugas password ini secara manual.</span>
+          </div>
+        {/if}
+        
+        <!-- Warning -->
+        <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-6">
+          <p class="text-sm text-amber-800 dark:text-amber-400 text-center">
+            <strong>⚠️ Penting:</strong> Password hanya ditampilkan sekali. Pastikan sudah dicopy atau diberitahu ke petugas sebelum menutup.
+          </p>
+        </div>
+        
+        <!-- Close Button -->
+        <button 
+          type="button"
+          onclick={closeSuccessModal}
+          class="w-full py-4 px-6 bg-primary-600 hover:bg-primary-500 text-white rounded-xl font-bold text-lg transition-all"
+        >
+          Selesai
+        </button>
+      </div>
+    </div>
+  {/if}
+
   <!-- Add Form -->
   {#if showAddForm}
     <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/40 dark:border-slate-700/40 shadow-[0_20px_50px_rgb(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgb(0,0,0,0.4)] rounded-[2rem] p-8 mb-8">
@@ -114,9 +245,14 @@
             <p class="text-sm text-red-600 dark:text-red-400 font-medium">{form.error}</p>
           </div>
         {/if}
-        {#if form?.success}
+        {#if form?.success && !form?.generatedPassword}
           <div class="p-4 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
-            <p class="text-sm text-green-600 dark:text-green-400 font-medium">{form.message}</p>
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                <Check class="w-4 h-4 text-green-600 dark:text-green-400" />
+              </div>
+              <p class="text-sm text-green-600 dark:text-green-400 font-medium">{form.message}</p>
+            </div>
           </div>
         {/if}
         <div class="flex justify-end gap-3">
@@ -207,7 +343,7 @@
               <div class="flex items-center gap-2 text-sm">
                 <Shield class="w-4 h-4 text-slate-400" />
                 <span class="text-slate-600 dark:text-slate-400 font-medium">Bergabung:</span>
-                <span class="text-slate-900 dark:text-white font-bold">{formatDate(u.created_at)}</span>
+                <span class="text-slate-900 dark:text-white font-bold">{formatDate(u.joined_at)}</span>
               </div>
             </div>
 

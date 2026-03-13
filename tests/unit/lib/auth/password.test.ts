@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { hashPassword, verifyPassword } from '$lib/auth/password';
+import { hashPassword, verifyPassword, generatePassword } from '$lib/auth/password';
 
 describe('Password Hashing', () => {
   const testPassword = 'mySecurePassword123!';
@@ -93,6 +93,32 @@ describe('Password Hashing', () => {
         const isValid = await verifyPassword(password, hash);
         expect(isValid).toBe(true);
       }
+    });
+  });
+
+  describe('generatePassword', () => {
+    it('should generate a password of default length 12', () => {
+      const password = generatePassword();
+      expect(password.length).toBe(12);
+    });
+
+    it('should generate password of specified length', () => {
+      const password = generatePassword(16);
+      expect(password.length).toBe(16);
+    });
+
+    it('should generate unique passwords', () => {
+      const passwords = new Set();
+      for (let i = 0; i < 10; i++) {
+        passwords.add(generatePassword());
+      }
+      expect(passwords.size).toBe(10);
+    });
+
+    it('should generate passwords with valid characters', () => {
+      const password = generatePassword();
+      const validChars = /^[a-zA-Z0-9!@#$%^&*]+$/;
+      expect(password).toMatch(validChars);
     });
   });
 });

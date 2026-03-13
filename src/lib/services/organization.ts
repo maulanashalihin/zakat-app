@@ -32,6 +32,36 @@ export class OrganizationService {
 		return !existing;
 	}
 
+	// Create new organization
+	async create(data: {
+		name: string;
+		slug: string;
+		address?: string;
+		phone?: string;
+		email?: string;
+	}): Promise<string> {
+		const id = crypto.randomUUID();
+		const now = Date.now();
+
+		await this.db
+			.insertInto('organizations')
+			.values({
+				id,
+				name: data.name,
+				slug: data.slug,
+				address: data.address || null,
+				phone: data.phone || null,
+				email: data.email || null,
+				logo_url: null,
+				is_active: 1,
+				created_at: now,
+				updated_at: now
+			})
+			.execute();
+
+		return id;
+	}
+
 	// Get organization by user ID
 	async getByUserId(userId: string) {
 		const membership = await this.db

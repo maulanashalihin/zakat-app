@@ -76,18 +76,25 @@
           </div>
 
           <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-            <div class="flex items-center gap-2">
-              <Users class="w-5 h-5 text-primary-600 dark:text-primary-400" />
-              <div class="text-left">
+            <!-- Tim -->
+            <div class="flex items-start gap-3">
+              <div class="w-8 h-8 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Users class="w-4 h-4 text-primary-600 dark:text-primary-400" />
+              </div>
+              <div>
                 <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Tim</p>
-                <p class="text-sm font-bold text-slate-900 dark:text-white">1 Anggota</p>
+                <p class="text-sm font-bold text-slate-900 dark:text-white">1 Admin</p>
+                <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Tambah petugas di dashboard</p>
               </div>
             </div>
-            <div class="flex items-center gap-2">
-              <MapPin class="w-5 h-5 text-primary-600 dark:text-primary-400" />
-              <div class="text-left">
+            <!-- Sektor -->
+            <div class="flex items-start gap-3">
+              <div class="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                <MapPin class="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div>
                 <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Sektor</p>
-                <p class="text-sm font-bold text-slate-900 dark:text-white">{organization?.sectors?.length || 0} Wilayah</p>
+                <p class="text-sm font-bold text-slate-900 dark:text-white">{organization?.sectorsCount || 0} Wilayah</p>
               </div>
             </div>
           </div>

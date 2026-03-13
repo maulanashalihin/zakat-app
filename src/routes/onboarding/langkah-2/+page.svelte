@@ -66,7 +66,7 @@
             type="number"
             id="defaultUangPerJiwa"
             name="defaultUangPerJiwa"
-            value={values.defaultUangPerJiwa ?? 40000}
+            value={values.defaultUangPerJiwa ?? 50000}
             step="1000"
             min="10000"
             max="200000"
@@ -74,7 +74,7 @@
             required
           />
         </div>
-        <p class="mt-2 text-xs text-slate-500 dark:text-slate-400 font-medium">Standar: Rp 35.000 - Rp 50.000</p>
+        <p class="mt-2 text-xs text-slate-500 dark:text-slate-400 font-medium">Standar: Rp 40.000 - Rp 60.000</p>
         {#if errors?.defaultUangPerJiwa}
           <p class="mt-1 text-sm text-red-600 dark:text-red-400 font-medium">{errors.defaultUangPerJiwa}</p>
         {/if}
