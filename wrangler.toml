@@ -18,6 +18,12 @@ compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = ".svelte-kit/cloudflare"
 
 # ---------------------------------------------------------------------------
+# Build Configuration for Cloudflare Pages
+# ---------------------------------------------------------------------------
+[build]
+command = "pnpm run build"
+
+# ---------------------------------------------------------------------------
 # D1 Database Binding (WAJIB)
 # ---------------------------------------------------------------------------
 # Database ini akan tersedia di code via: env.DB (Kysely/Drizzle)
